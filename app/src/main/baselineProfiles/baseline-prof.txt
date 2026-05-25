@@ -31584,12 +31584,6 @@ HSPLmihon/domain/migration/models/MigrationFlag$Companion;-><init>(Lkotlin/jvm/i
 Lmihon/domain/migration/usecases/MigrateMangaUseCase;
 Lmihon/domain/source/interactor/UpdateMangaFromRemote;
 Lmihon/domain/upcoming/interactor/GetUpcomingManga;
-Lmihon/telemetry/TelemetryConfig;
-HSPLmihon/telemetry/TelemetryConfig;-><clinit>()V
-HSPLmihon/telemetry/TelemetryConfig;-><init>()V
-HSPLmihon/telemetry/TelemetryConfig;->init(Landroid/content/Context;)V
-HSPLmihon/telemetry/TelemetryConfig;->setAnalyticsEnabled(Z)V
-HSPLmihon/telemetry/TelemetryConfig;->setCrashlyticsEnabled(Z)V
 Lnl/adaptivity/xmlutil/BaseXmlSerialDescriptor;
 HSPLnl/adaptivity/xmlutil/BaseXmlSerialDescriptor;-><init>(Lkotlinx/serialization/descriptors/SerialDescriptor;Ljavax/xml/namespace/QName;)V
 Lnl/adaptivity/xmlutil/ExtXmlSerialDescriptor;

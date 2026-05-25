@@ -1,15 +1,10 @@
 package eu.kanade.presentation.more.settings.screen.debug
 
 import android.os.Build
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.profileinstaller.ProfileVerifier
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -20,13 +15,7 @@ import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.WebViewUtil
-import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.guava.await
-import kotlinx.coroutines.launch
-import mihon.app.di.appGraph
-import mihon.core.common.FeatureFlags
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Autorenew
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.util.collectAsState
 
@@ -57,12 +46,6 @@ class DebugInfoScreen : Screen() {
 
     @Composable
     private fun getAppInfoGroup(): Preference.PreferenceGroup {
-        val context = LocalContext.current
-        val scope = rememberCoroutineScope()
-
-        val installationIdPref = remember { context.appGraph.basePreferences.installationId }
-        val installationId by installationIdPref.collectAsState()
-
         return Preference.PreferenceGroup(
             title = "App info",
             preferenceItems = listOf(
@@ -73,28 +56,6 @@ class DebugInfoScreen : Screen() {
                 Preference.PreferenceItem.TextPreference(
                     title = "Build time",
                     subtitle = AboutScreen.getFormattedBuildTime(),
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = "Installation ID",
-                    subtitle = installationId,
-                    widget = {
-                        IconButton(
-                            onClick = {
-                                scope.launch {
-                                    installationIdPref.set(FeatureFlags.newInstallationId())
-                                }
-                            },
-                        ) {
-                            Icon(
-                                imageVector = MaterialSymbols.Rounded.Autorenew,
-                                tint = MaterialTheme.colorScheme.primary,
-                                contentDescription = null,
-                            )
-                        }
-                    },
-                    onClick = {
-                        context.copyToClipboard(installationId, installationId)
-                    },
                 ),
                 getProfileVerifierPreference(),
                 Preference.PreferenceItem.TextPreference(
@@ -141,7 +102,7 @@ class DebugInfoScreen : Screen() {
             add(
                 Preference.PreferenceItem.TextPreference(
                     title = "Model",
-                    subtitle = "${Build.MANUFACTURER} ${Build.MODEL} (${Build.DEVICE})",
+                    subtitle = "${Build.MANUFACTURER} ${Build.MODEL}",
                 ),
             )
 

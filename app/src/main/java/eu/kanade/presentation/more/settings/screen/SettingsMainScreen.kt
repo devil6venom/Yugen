@@ -224,13 +224,5 @@ object SettingsMainScreen : Screen() {
             icon = MaterialSymbols.Rounded.Code,
             screen = SettingsAdvancedScreen,
         ),
-        Item(
-            titleRes = MR.strings.pref_category_about,
-            formatSubtitle = {
-                "${stringResource(MR.strings.app_name)} ${AboutScreen.getVersionName(withBuildDate = false)}"
-            },
-            icon = MaterialSymbols.Rounded.Info,
-            screen = AboutScreen,
-        ),
     )
 }
