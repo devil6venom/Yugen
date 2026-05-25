@@ -1,0 +1,45 @@
+name: Auto Spotless
+on:
+  push:
+    branches: '**'
+
+permissions:
+  contents: write
+
+jobs:
+  spotless:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Auto format
+        run: ./gradlew spotlessApply
+
+      - name: Apply formatting
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # NOTE: ONLY stage the exact source files Spotless targets.
+          git add -u -- '*.kt' 2>/dev/null || true
+          git add -u -- '*.kts' 2>/dev/null || true
+          git add -u -- '*.xml' 2>/dev/null || true
+          
+          # Check if any formatting changes were actually staged
+          git diff --cached --quiet && exit 0
+          
+          # Commit and push strictly to the active branch
+          git commit -m "Apply Spotless formatting"
+          git push origin HEAD

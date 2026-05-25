@@ -7,6 +7,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ChromeReaderMode
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.CollectionsBookmark
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.GetApp
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
@@ -28,22 +40,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
-import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.ChromeReaderMode
-import mihon.icons.materialsymbols.rounded.Code
-import mihon.icons.materialsymbols.rounded.CollectionsBookmark
-import mihon.icons.materialsymbols.rounded.Download
-import mihon.icons.materialsymbols.rounded.Explore
-import mihon.icons.materialsymbols.rounded.Info
-import mihon.icons.materialsymbols.rounded.Palette
-import mihon.icons.materialsymbols.rounded.Search
-import mihon.icons.materialsymbols.rounded.Security
-import mihon.icons.materialsymbols.rounded.Storage
-import mihon.icons.materialsymbols.rounded.Sync
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -90,7 +89,7 @@ object SettingsMainScreen : Screen() {
                             listOf(
                                 AppBar.Action(
                                     title = stringResource(MR.strings.action_search),
-                                    icon = MaterialSymbols.Rounded.Search,
+                                    icon = Icons.Outlined.Search,
                                     onClick = { navigator.navigate(SettingsSearchScreen(), twoPane) },
                                 ),
                             ),
@@ -174,64 +173,56 @@ object SettingsMainScreen : Screen() {
         Item(
             titleRes = MR.strings.pref_category_appearance,
             subtitleRes = MR.strings.pref_appearance_summary,
-            icon = MaterialSymbols.Rounded.Palette,
+            icon = Icons.Outlined.Palette,
             screen = SettingsAppearanceScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_library,
             subtitleRes = MR.strings.pref_library_summary,
-            icon = MaterialSymbols.Rounded.CollectionsBookmark,
+            icon = Icons.Outlined.CollectionsBookmark,
             screen = SettingsLibraryScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_reader,
             subtitleRes = MR.strings.pref_reader_summary,
-            icon = MaterialSymbols.AutoMirroredRounded.ChromeReaderMode,
+            icon = Icons.AutoMirrored.Outlined.ChromeReaderMode,
             screen = SettingsReaderScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_downloads,
             subtitleRes = MR.strings.pref_downloads_summary,
-            icon = MaterialSymbols.Rounded.Download,
+            icon = Icons.Outlined.GetApp,
             screen = SettingsDownloadScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_tracking,
             subtitleRes = MR.strings.pref_tracking_summary,
-            icon = MaterialSymbols.Rounded.Sync,
+            icon = Icons.Outlined.Sync,
             screen = SettingsTrackingScreen,
         ),
         Item(
             titleRes = MR.strings.browse,
             subtitleRes = MR.strings.pref_browse_summary,
-            icon = MaterialSymbols.Rounded.Explore,
+            icon = Icons.Outlined.Explore,
             screen = SettingsBrowseScreen,
         ),
         Item(
             titleRes = MR.strings.label_data_storage,
             subtitleRes = MR.strings.pref_backup_summary,
-            icon = MaterialSymbols.Rounded.Storage,
+            icon = Icons.Outlined.Storage,
             screen = SettingsDataScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_security,
             subtitleRes = MR.strings.pref_security_summary,
-            icon = MaterialSymbols.Rounded.Security,
+            icon = Icons.Outlined.Security,
             screen = SettingsSecurityScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_advanced,
             subtitleRes = MR.strings.pref_advanced_summary,
-            icon = MaterialSymbols.Rounded.Code,
+            icon = Icons.Outlined.Code,
             screen = SettingsAdvancedScreen,
-        ),
-        Item(
-            titleRes = MR.strings.pref_category_about,
-            formatSubtitle = {
-                "${stringResource(MR.strings.app_name)} ${AboutScreen.getVersionName(withBuildDate = false)}"
-            },
-            icon = MaterialSymbols.Rounded.Info,
-            screen = AboutScreen,
         ),
     )
 }

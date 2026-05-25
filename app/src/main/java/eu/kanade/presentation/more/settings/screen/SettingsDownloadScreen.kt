@@ -52,13 +52,13 @@ object SettingsDownloadScreen : SearchableSettings {
             ),
             Preference.PreferenceItem.SliderPreference(
                 value = parallelSourceLimit,
-                valueRange = 1..10,
+                valueRange = 1..20,
                 title = stringResource(MR.strings.pref_download_concurrent_sources),
                 onValueChanged = { downloadPreferences.parallelSourceLimit.set(it) },
             ),
             Preference.PreferenceItem.SliderPreference(
                 value = parallelPageLimit,
-                valueRange = 1..15,
+                valueRange = 1..30,
                 title = stringResource(MR.strings.pref_download_concurrent_pages),
                 subtitle = stringResource(MR.strings.pref_download_concurrent_pages_summary),
                 onValueChanged = { downloadPreferences.parallelPageLimit.set(it) },

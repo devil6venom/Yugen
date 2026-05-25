@@ -6,7 +6,6 @@ CREATE TABLE extension_store(
     badge_label TEXT NOT NULL,
     signing_key TEXT NOT NULL,
     contact_website TEXT NOT NULL,
-    contact_discord TEXT,
     is_legacy INTEGER AS Boolean NOT NULL,
     extension_list_url TEXT
 );
@@ -25,8 +24,8 @@ SELECT COUNT(*)
 FROM extension_store;
 
 upsert:
-INSERT INTO extension_store(index_url, name, badge_label, signing_key, contact_website, contact_discord, is_legacy, extension_list_url)
-VALUES (:indexUrl, :name, :badgeLabel, :signingKey, :contactWebsite, :contactDiscord, :isLegacy, :extensionListUrl)
+INSERT INTO extension_store(index_url, name, badge_label, signing_key, contact_website, is_legacy, extension_list_url)
+VALUES (:indexUrl, :name, :badgeLabel, :signingKey, :contactWebsite, :isLegacy, :extensionListUrl)
 ON CONFLICT(index_url)
 DO UPDATE
 SET
@@ -34,7 +33,6 @@ SET
     badge_label = :badgeLabel,
     signing_key =: signingKey,
     contact_website = :contactWebsite,
-    contact_discord = :contactDiscord,
     is_legacy = :isLegacy,
     extension_list_url = :extensionListUrl
 WHERE index_url = :indexUrl;

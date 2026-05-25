@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,7 +35,6 @@ import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
 import eu.kanade.tachiyomi.util.lang.toDateTimestampString
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.isFossBuildType
-import eu.kanade.tachiyomi.util.system.isNightlyBuildType
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.system.updaterEnabled
 import kotlinx.coroutines.launch
@@ -41,15 +42,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import logcat.LogPriority
 import mihon.app.di.appGraph
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Public
-import mihon.icons.simpleicons.Discord
-import mihon.icons.simpleicons.Facebook
-import mihon.icons.simpleicons.Github
-import mihon.icons.simpleicons.Reddit
-import mihon.icons.simpleicons.SimpleIcons
-import mihon.icons.simpleicons.X
-import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
@@ -59,6 +51,8 @@ import tachiyomi.presentation.core.components.LinkIcon
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.icons.CustomIcons
+import tachiyomi.presentation.core.icons.Github
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Instant
@@ -96,7 +90,7 @@ object AboutScreen : Screen() {
                 item {
                     TextPreferenceWidget(
                         title = stringResource(MR.strings.version),
-                        subtitle = getVersionName(withBuildDate = true),
+                        subtitle = getVersionName(withBuildDate = false),
                         onPreferenceClick = {
                             val deviceInfo = crashLogUtil.getDebugInfo()
                             context.copyToClipboard("Debug information", deviceInfo)
@@ -174,34 +168,9 @@ object AboutScreen : Screen() {
                         horizontalArrangement = Arrangement.Center,
                     ) {
                         LinkIcon(
-                            label = stringResource(MR.strings.website),
-                            icon = MaterialSymbols.Rounded.Public,
-                            url = "https://mihon.app",
-                        )
-                        LinkIcon(
-                            label = "Discord",
-                            icon = SimpleIcons.Discord,
-                            url = Constants.URL_DISCORD,
-                        )
-                        LinkIcon(
-                            label = "X",
-                            icon = SimpleIcons.X,
-                            url = "https://x.com/mihonapp",
-                        )
-                        LinkIcon(
-                            label = "Facebook",
-                            icon = SimpleIcons.Facebook,
-                            url = "https://facebook.com/mihonapp",
-                        )
-                        LinkIcon(
-                            label = "Reddit",
-                            icon = SimpleIcons.Reddit,
-                            url = "https://www.reddit.com/r/mihonapp",
-                        )
-                        LinkIcon(
                             label = "GitHub",
-                            icon = SimpleIcons.Github,
-                            url = "https://github.com/mihonapp",
+                            icon = CustomIcons.Github,
+                            url = "https://github.com/ddCeka/mihon",
                         )
                     }
                 }
@@ -243,20 +212,11 @@ object AboutScreen : Screen() {
     fun getVersionName(withBuildDate: Boolean): String {
         return when {
             BuildConfig.DEBUG -> {
-                "Debug ${BuildConfig.COMMIT_SHA}".let {
+                "Debug v${BuildConfig.VERSION_NAME}".let {
                     if (withBuildDate) {
                         "$it (${getFormattedBuildTime()})"
                     } else {
                         it
-                    }
-                }
-            }
-            isNightlyBuildType -> {
-                "Nightly r${BuildConfig.COMMIT_COUNT}".let {
-                    if (withBuildDate) {
-                        "$it (${BuildConfig.COMMIT_SHA}, ${getFormattedBuildTime()})"
-                    } else {
-                        "$it (${BuildConfig.COMMIT_SHA})"
                     }
                 }
             }

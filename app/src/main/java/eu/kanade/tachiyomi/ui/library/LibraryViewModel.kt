@@ -491,7 +491,6 @@ class LibraryViewModel(
      */
     fun performDownloadAction(action: DownloadAction) {
         when (action) {
-            DownloadAction.NEXT_1_CHAPTER -> downloadNextChapters(1)
             DownloadAction.NEXT_5_CHAPTERS -> downloadNextChapters(5)
             DownloadAction.NEXT_10_CHAPTERS -> downloadNextChapters(10)
             DownloadAction.NEXT_25_CHAPTERS -> downloadNextChapters(25)

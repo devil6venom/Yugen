@@ -90,7 +90,6 @@ private fun getThemeColorScheme(
 private val colorSchemes: Map<AppTheme, BaseColorScheme> = mapOf(
     AppTheme.DEFAULT to TachiyomiColorScheme,
     AppTheme.CATPPUCCIN to CatppuccinColorScheme,
-    AppTheme.TOKYONIGHT to TokyoNightColorScheme,
     AppTheme.GREEN_APPLE to GreenAppleColorScheme,
     AppTheme.LAVENDER to LavenderColorScheme,
     AppTheme.MIDNIGHT_DUSK to MidnightDuskColorScheme,
@@ -100,6 +99,7 @@ private val colorSchemes: Map<AppTheme, BaseColorScheme> = mapOf(
     AppTheme.TAKO to TakoColorScheme,
     AppTheme.TEALTURQUOISE to TealTurqoiseColorScheme,
     AppTheme.TIDAL_WAVE to TidalWaveColorScheme,
+    AppTheme.TOKYONIGHT to TokyoNightColorScheme,
     AppTheme.YINYANG to YinYangColorScheme,
     AppTheme.YOTSUBA to YotsubaColorScheme,
 )
