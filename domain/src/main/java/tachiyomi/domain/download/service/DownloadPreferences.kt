@@ -19,8 +19,6 @@ class DownloadPreferences(
 
     val saveChaptersAsCBZ: Preference<Boolean> = preferenceStore.getBoolean("save_chapter_as_cbz", true)
 
-    val saveAsPdf: Preference<Boolean> = preferenceStore.getBoolean("pref_save_as_pdf", false)
-
     val splitTallImages: Preference<Boolean> = preferenceStore.getBoolean("split_tall_images", true)
 
     val autoDownloadWhileReading: Preference<Int> = preferenceStore.getInt("auto_download_while_reading", 0)
@@ -57,8 +55,8 @@ class DownloadPreferences(
     )
 
     val parallelSourceLimit: Preference<Int> = preferenceStore.getInt("download_parallel_source_limit", 20)
-    val parallelChapterLimit: Preference<Int> = preferenceStore.getInt("download_parallel_chapter_limit", 2)
-    val parallelPageLimit: Preference<Int> = preferenceStore.getInt("download_parallel_page_limit", 30)
+
+    val parallelPageLimit: Preference<Int> = preferenceStore.getInt("download_parallel_page_limit", 20)
 
     companion object {
         private const val REMOVE_EXCLUDE_CATEGORIES_PREF_KEY = "remove_exclude_categories"

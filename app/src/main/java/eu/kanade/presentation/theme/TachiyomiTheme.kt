@@ -4,16 +4,12 @@ import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialExpressiveTheme
-import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.presentation.theme.colorscheme.BaseColorScheme
 import eu.kanade.presentation.theme.colorscheme.CatppuccinColorScheme
-import eu.kanade.presentation.theme.colorscheme.GithubColorScheme
-import eu.kanade.presentation.theme.colorscheme.GothamColorScheme
 import eu.kanade.presentation.theme.colorscheme.GreenAppleColorScheme
 import eu.kanade.presentation.theme.colorscheme.LavenderColorScheme
 import eu.kanade.presentation.theme.colorscheme.MidnightDuskColorScheme
@@ -60,7 +56,6 @@ private fun BaseTachiyomiTheme(
 ) {
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
-    val boldText = remember { context.appGraph.uiPreferences.boldText.get() }
     MaterialExpressiveTheme(
         colorScheme = remember(appTheme, isDark, isAmoled) {
             getThemeColorScheme(
@@ -70,32 +65,7 @@ private fun BaseTachiyomiTheme(
                 isAmoled = isAmoled,
             )
         },
-        typography = remember(boldText) {
-            if (boldText) boldTypography() else Typography()
-        },
         content = content,
-    )
-}
-
-private fun boldTypography(): Typography {
-    val base = Typography()
-    val bold = FontWeight.Bold
-    return base.copy(
-        bodyLarge = base.bodyLarge.copy(fontWeight = bold),
-        bodyMedium = base.bodyMedium.copy(fontWeight = bold),
-        bodySmall = base.bodySmall.copy(fontWeight = bold),
-        labelLarge = base.labelLarge.copy(fontWeight = bold),
-        labelMedium = base.labelMedium.copy(fontWeight = bold),
-        labelSmall = base.labelSmall.copy(fontWeight = bold),
-        titleLarge = base.titleLarge.copy(fontWeight = bold),
-        titleMedium = base.titleMedium.copy(fontWeight = bold),
-        titleSmall = base.titleSmall.copy(fontWeight = bold),
-        headlineSmall = base.headlineSmall.copy(fontWeight = bold),
-        headlineMedium = base.headlineMedium.copy(fontWeight = bold),
-        headlineLarge = base.headlineLarge.copy(fontWeight = bold),
-        displaySmall = base.displaySmall.copy(fontWeight = bold),
-        displayMedium = base.displayMedium.copy(fontWeight = bold),
-        displayLarge = base.displayLarge.copy(fontWeight = bold),
     )
 }
 
@@ -120,8 +90,6 @@ private fun getThemeColorScheme(
 private val colorSchemes: Map<AppTheme, BaseColorScheme> = mapOf(
     AppTheme.DEFAULT to TachiyomiColorScheme,
     AppTheme.CATPPUCCIN to CatppuccinColorScheme,
-    AppTheme.GITHUB to GithubColorScheme,
-    AppTheme.GOTHAM to GothamColorScheme,
     AppTheme.GREEN_APPLE to GreenAppleColorScheme,
     AppTheme.LAVENDER to LavenderColorScheme,
     AppTheme.MIDNIGHT_DUSK to MidnightDuskColorScheme,
