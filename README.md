@@ -12,4 +12,4 @@
 ## Download
 
 [![Mihon Stable](https://img.shields.io/github/v/release/ddCeka/mihon.svg?maxAge=3600&label=Stable&labelColor=5F8787&color=004F4F)](https://github.com/ddCeka/mihon/releases)
-[![Mihon Beta](https://img.shields.io/github/v/release/ddCeka/mihon.svg?include_prereleases&label=Beta&labelColor=2c2c47&color=1c1c39)](https://github.com/ddCeka/mihon/releases)
+[![Mihon Beta](https://img.shields.io/github/v/release/ddCeka/mihon.svg?include_prereleases&label=Beta&labelColor=06599d&color=043b69)](https://github.com/ddCeka/mihon/releases)

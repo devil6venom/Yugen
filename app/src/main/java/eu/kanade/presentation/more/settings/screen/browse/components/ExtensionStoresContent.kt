@@ -21,8 +21,6 @@ import mihon.icons.materialsymbols.automirroredrounded.Label
 import mihon.icons.materialsymbols.rounded.ContentCopy
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.Public
-import mihon.icons.simpleicons.Discord
-import mihon.icons.simpleicons.SimpleIcons
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -34,7 +32,6 @@ fun ExtensionStoresContent(
     paddingValues: PaddingValues,
     onCopy: (ExtensionStore) -> Unit,
     onOpenWebsite: (ExtensionStore) -> Unit,
-    onOpenDiscord: (ExtensionStore) -> Unit,
     onClickDelete: (ExtensionStore) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -50,7 +47,6 @@ fun ExtensionStoresContent(
                     modifier = Modifier.animateItem(),
                     store = it,
                     onOpenWebsite = { onOpenWebsite(it) },
-                    onOpenDiscord = { onOpenDiscord(it) },
                     onCopy = { onCopy(it) },
                     onDelete = { onClickDelete(it) },
                 )
@@ -63,7 +59,6 @@ fun ExtensionStoresContent(
 private fun ExtensionStoresListItem(
     store: ExtensionStore,
     onOpenWebsite: () -> Unit,
-    onOpenDiscord: () -> Unit,
     onCopy: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
@@ -98,15 +93,6 @@ private fun ExtensionStoresListItem(
                     imageVector = MaterialSymbols.Rounded.Public,
                     contentDescription = stringResource(MR.strings.action_open_in_browser),
                 )
-            }
-
-            if (store.contact.discord != null) {
-                IconButton(onClick = onOpenDiscord) {
-                    Icon(
-                        imageVector = SimpleIcons.Discord,
-                        contentDescription = null,
-                    )
-                }
             }
 
             IconButton(onClick = onCopy) {
