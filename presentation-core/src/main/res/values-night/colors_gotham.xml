@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gotham Dark Palette -->
+<resources>
+    <color name="gotham_primary">#008787</color>
+    <color name="gotham_onPrimary">#000000</color>
+    <color name="gotham_primaryContainer">#004F4F</color>
+    <color name="gotham_onPrimaryContainer">#9EEBEB</color>
+    <color name="gotham_secondary">#5F8787</color>
+    <color name="gotham_onSecondary">#11151C</color>
+    <color name="gotham_secondaryContainer">#1C2D30</color>
+    <color name="gotham_onSecondaryContainer">#D1E3E3</color>
+    <color name="gotham_tertiary">#DFA731</color>
+    <color name="gotham_onTertiary">#000000</color>
+    <color name="gotham_tertiaryContainer">#573E00</color>
+    <color name="gotham_onTertiaryContainer">#FFFFE0A1</color>
+    <color name="gotham_error">#FFFF5555</color>
+    <color name="gotham_onError">#11151C</color>
+    <color name="gotham_errorContainer">#681016</color>
+    <color name="gotham_onErrorContainer">#FFFFDAD9</color>
+    <color name="gotham_background">#0C1014</color>
+    <color name="gotham_onBackground">#9E9E9E</color>
+    <color name="gotham_surface">#0C1014</color>
+    <color name="gotham_onSurface">#9E9E9E</color>
+    <color name="gotham_surfaceVariant">#11151C</color>
+    <color name="gotham_onSurfaceVariant">#BCBCBC</color>
+    <color name="gotham_outline">#4E5A65</color>
+    <color name="gotham_outlineVariant">#1C212A</color>
+    <color name="gotham_scrim">#000000</color>
+    <color name="gotham_inverseSurface">#9E9E9E</color>
+    <color name="gotham_inverseOnSurface">#0C1014</color>
+    <color name="gotham_inversePrimary">#005F5F</color>
+    <color name="gotham_surfaceDim">#0C1014</color>
+    <color name="gotham_surfaceBright">#29323F</color>
+    <color name="gotham_surfaceContainerLowest">#070A0D</color>
+    <color name="gotham_surfaceContainerLow">#101419</color>
+    <color name="gotham_surfaceContainer">#141920</color>
+    <color name="gotham_surfaceContainerHigh">#1A2029</color>
+    <color name="gotham_surfaceContainerHighest">#212833</color>
+</resources>

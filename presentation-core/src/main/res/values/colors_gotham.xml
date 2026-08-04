@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gotham Light Palette -->
+<resources>
+    <color name="gotham_primary">#005F5F</color>
+    <color name="gotham_onPrimary">#FFFFFF</color>
+    <color name="gotham_primaryContainer">#9EEBEB</color>
+    <color name="gotham_onPrimaryContainer">#002020</color>
+    <color name="gotham_secondary">#4E5A65</color>
+    <color name="gotham_onSecondary">#FFFFFF</color>
+    <color name="gotham_secondaryContainer">#D6E2ED</color>
+    <color name="gotham_onSecondaryContainer">#0F171E</color>
+    <color name="gotham_tertiary">#C28500</color>
+    <color name="gotham_onTertiary">#FFFFFF</color>
+    <color name="gotham_tertiaryContainer">#FFFFE0A1</color>
+    <color name="gotham_onTertiaryContainer">#241600</color>
+    <color name="gotham_error">#BA1A1A</color>
+    <color name="gotham_onError">#FFFFFF</color>
+    <color name="gotham_errorContainer">#FFFFDAD6</color>
+    <color name="gotham_onErrorContainer">#410002</color>
+    <color name="gotham_background">#EEEEEE</color>
+    <color name="gotham_onBackground">#0C1014</color>
+    <color name="gotham_surface">#EEEEEE</color>
+    <color name="gotham_onSurface">#0C1014</color>
+    <color name="gotham_surfaceVariant">#D8DEC9</color>
+    <color name="gotham_onSurfaceVariant">#4E5A65</color>
+    <color name="gotham_outline">#8A959E</color>
+    <color name="gotham_outlineVariant">#C5D1DC</color>
+    <color name="gotham_scrim">#000000</color>
+    <color name="gotham_inverseSurface">#0C1014</color>
+    <color name="gotham_inverseOnSurface">#EEEEEE</color>
+    <color name="gotham_inversePrimary">#008787</color>
+    <color name="gotham_surfaceDim">#E2E2E2</color>
+    <color name="gotham_surfaceBright">#FAFAFA</color>
+    <color name="gotham_surfaceContainerLowest">#FFFFFF</color>
+    <color name="gotham_surfaceContainerLow">#F5F5F5</color>
+    <color name="gotham_surfaceContainer">#EAEAEA</color>
+    <color name="gotham_surfaceContainerHigh">#DFDFDF</color>
+    <color name="gotham_surfaceContainerHighest">#D4D4D4</color>
+</resources>
