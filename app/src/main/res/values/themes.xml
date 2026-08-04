@@ -128,6 +128,46 @@
         <item name="colorSurfaceContainerLowest">@color/catppuccin_surfaceContainerLowest</item>
     </style>
 
+    <!--== Gotham Theme ==-->
+    <style name="Theme.Tachiyomi.Gotham">
+        <!-- Theme Colors -->
+        <item name="colorPrimary">@color/gotham_primary</item>
+        <item name="colorOnPrimary">@color/gotham_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/gotham_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/gotham_onPrimaryContainer</item>
+        <item name="colorPrimaryInverse">@color/gotham_inversePrimary</item>
+        <item name="colorSecondary">@color/gotham_secondary</item>
+        <item name="colorOnSecondary">@color/gotham_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/gotham_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/gotham_onSecondaryContainer</item>
+        <item name="colorTertiary">@color/gotham_tertiary</item>
+        <item name="colorOnTertiary">@color/gotham_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/gotham_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/gotham_onTertiaryContainer</item>
+        <item name="android:colorBackground">@color/gotham_background</item>
+        <item name="colorOnBackground">@color/gotham_onBackground</item>
+        <item name="colorSurface">@color/gotham_surface</item>
+        <item name="colorOnSurface">@color/gotham_onSurface</item>
+        <item name="colorSurfaceVariant">@color/gotham_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/gotham_onSurfaceVariant</item>
+        <item name="colorSurfaceInverse">@color/gotham_inverseSurface</item>
+        <item name="colorOnSurfaceInverse">@color/gotham_inverseOnSurface</item>
+        <item name="colorError">@color/gotham_error</item>
+        <item name="colorOnError">@color/gotham_onError</item>
+        <item name="colorErrorContainer">@color/gotham_errorContainer</item>
+        <item name="colorOnErrorContainer">@color/gotham_onErrorContainer</item>
+        <item name="colorOutline">@color/gotham_outline</item>
+        <item name="colorOutlineVariant">@color/gotham_outlineVariant</item>
+        <item name="scrimBackground">@color/gotham_scrim</item>
+        <item name="colorSurfaceBright">@color/gotham_surfaceBright</item>
+        <item name="colorSurfaceDim">@color/gotham_surfaceDim</item>
+        <item name="colorSurfaceContainer">@color/gotham_surfaceContainer</item>
+        <item name="colorSurfaceContainerHigh">@color/gotham_surfaceContainerHigh</item>
+        <item name="colorSurfaceContainerHighest">@color/gotham_surfaceContainerHighest</item>
+        <item name="colorSurfaceContainerLow">@color/gotham_surfaceContainerLow</item>
+        <item name="colorSurfaceContainerLowest">@color/gotham_surfaceContainerLowest</item>
+    </style>
+
     <!--== Green Apple Theme ==-->
     <style name="Theme.Tachiyomi.GreenApple">
         <!-- Theme Colors -->
