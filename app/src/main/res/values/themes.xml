@@ -128,7 +128,6 @@
         <item name="colorSurfaceContainerLowest">@color/catppuccin_surfaceContainerLowest</item>
     </style>
 
-<<<<<<< HEAD
     <!--== Github Theme ==-->
     <style name="Theme.Tachiyomi.Github">
         <!-- Theme Colors -->
@@ -208,9 +207,6 @@
         <item name="colorSurfaceContainerLow">@color/gotham_surfaceContainerLow</item>
         <item name="colorSurfaceContainerLowest">@color/gotham_surfaceContainerLowest</item>
     </style>
-
-=======
->>>>>>> 4af09e837 (Refactor Release build into foss)
     <!--== Green Apple Theme ==-->
     <style name="Theme.Tachiyomi.GreenApple">
         <!-- Theme Colors -->
