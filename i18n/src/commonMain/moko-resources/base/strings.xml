@@ -543,6 +543,8 @@
     <string name="auto_download_while_reading">Auto download while reading</string>
     <string name="download_ahead_info">Only works if the current chapter + the next one are already downloaded.</string>
     <string name="save_chapter_as_cbz">Save as CBZ archive</string>
+    <string name="save_as_pdf">Save One-Shots in PDF</string>
+    <string name="save_as_pdf_summary">Save as PDF to the folder with the manga name. The app will not show you as downloaded.</string>
     <string name="split_tall_images">Split tall images</string>
     <string name="split_tall_images_summary">Improves reader performance</string>
     <string name="pref_download_concurrent_sources">Concurrent source downloads</string>
