@@ -46,6 +46,11 @@ object SettingsDownloadScreen : SearchableSettings {
                 title = stringResource(MR.strings.save_chapter_as_cbz),
             ),
             Preference.PreferenceItem.SwitchPreference(
+                preference = downloadPreferences.saveAsPdf,
+                title = stringResource(MR.strings.save_as_pdf),
+                subtitle = stringResource(MR.strings.save_as_pdf_summary),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
                 preference = downloadPreferences.splitTallImages,
                 title = stringResource(MR.strings.split_tall_images),
                 subtitle = stringResource(MR.strings.split_tall_images_summary),

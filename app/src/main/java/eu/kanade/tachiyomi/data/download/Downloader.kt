@@ -1,6 +1,9 @@
 package eu.kanade.tachiyomi.data.download
 
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.graphics.Rect
+import android.graphics.pdf.PdfDocument
 import com.hippo.unifile.UniFile
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
@@ -376,14 +379,48 @@ class Downloader(
                 download.source,
             )
 
-            // Only rename the directory if it's downloaded
-            if (downloadPreferences.saveChaptersAsCBZ.get()) {
-                archiveChapter(mangaDir, chapterDirname, tmpDir)
-            } else {
-                tmpDir.renameTo(chapterDirname)
-            }
-            cache.addChapter(chapterDirname, mangaDir, download.manga)
+            val isPdfEnabled = downloadPreferences.saveAsPdf.get()
 
+            if (isPdfEnabled) {
+                val extensionDir = mangaDir.parentFile
+                val mangaNameSanitized = DiskUtil.buildValidFilename(download.manga.title)
+                val destFile = extensionDir?.createFile("$mangaNameSanitized.pdf")
+
+                if (destFile != null) {
+                    val document = PdfDocument()
+                    val imageFiles = tmpDir.listFiles()?.filter { it.isFile }?.sortedBy { it.name }
+
+                    imageFiles?.forEachIndexed { index, imgFile ->
+                        imgFile.openInputStream().use { stream ->
+                            val bitmap = BitmapFactory.decodeStream(stream)
+                            if (bitmap != null) {
+                                val pageInfo = PdfDocument.PageInfo.Builder(
+                                    bitmap.width,
+                                    bitmap.height,
+                                    index + 1,
+                                ).create()
+                                val page = document.startPage(pageInfo)
+                                page.canvas.drawBitmap(bitmap, null, Rect(0, 0, bitmap.width, bitmap.height), null)
+                                document.finishPage(page)
+                                bitmap.recycle()
+                            }
+                        }
+                    }
+                    destFile.openOutputStream().use { out ->
+                        document.writeTo(out)
+                    }
+                    document.close()
+                }
+                tmpDir.delete()
+            } else {
+                // Only rename the directory if it's downloaded
+                if (downloadPreferences.saveChaptersAsCBZ.get()) {
+                    archiveChapter(mangaDir, chapterDirname, tmpDir)
+                } else {
+                    tmpDir.renameTo(chapterDirname)
+                }
+                cache.addChapter(chapterDirname, mangaDir, download.manga)
+            }
             DiskUtil.createNoMediaFile(tmpDir, context)
 
             download.status = Download.State.DOWNLOADED
