@@ -23,12 +23,10 @@ class UiPreferences(
 
     val appTheme: Preference<AppTheme> = preferenceStore.getEnum(
         "pref_app_theme",
-        AppTheme.MONET,
+        AppTheme.DEFAULT,
     )
 
     val themeDarkAmoled: Preference<Boolean> = preferenceStore.getBoolean("pref_theme_dark_amoled_key", false)
-
-    val boldText: Preference<Boolean> = preferenceStore.getBoolean("pref_bold_text_key", false)
 
     val relativeTime: Preference<Boolean> = preferenceStore.getBoolean("relative_time_v2", true)
 
