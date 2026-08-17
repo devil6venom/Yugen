@@ -27,7 +27,9 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -362,30 +364,39 @@ class DownloadCache(
                     }
                     .toMap()
 
+                // Chapter-level listing is one SAF/DocumentsProvider IPC round trip per manga.
+                // Bound the concurrency across all sources so this doesn't run unbounded against
+                // Android's Binder thread pool while still overlapping the IPC wait time.
+                val chapterListingLimiter = Semaphore(CHAPTER_LISTING_CONCURRENCY)
+
                 updatedRootDir.sourceDirs.values.map { sourceDir ->
                     async {
                         sourceDir.mangaDirs = sourceDir.dir?.listFiles().orEmpty()
                             .filter { it.isDirectory && !it.name.isNullOrBlank() }
                             .associate { it.name!! to MangaDirectory(it) }
 
-                        sourceDir.mangaDirs.values.forEach { mangaDir ->
-                            val chapterDirs = mangaDir.dir?.listFiles().orEmpty()
-                                .mapNotNull {
-                                    when {
-                                        // Ignore incomplete downloads
-                                        it.name?.endsWith(Downloader.TMP_DIR_SUFFIX) == true -> null
-                                        // Folder of images
-                                        it.isDirectory -> it.name
-                                        // CBZ files
-                                        it.isFile && it.extension == "cbz" -> it.nameWithoutExtension
-                                        // Anything else is irrelevant
-                                        else -> null
-                                    }
-                                }
-                                .toMutableSet()
+                        sourceDir.mangaDirs.values.map { mangaDir ->
+                            async {
+                                chapterListingLimiter.withPermit {
+                                    val chapterDirs = mangaDir.dir?.listFiles().orEmpty()
+                                        .mapNotNull {
+                                            when {
+                                                // Ignore incomplete downloads
+                                                it.name?.endsWith(Downloader.TMP_DIR_SUFFIX) == true -> null
+                                                // Folder of images
+                                                it.isDirectory -> it.name
+                                                // CBZ files
+                                                it.isFile && it.extension == "cbz" -> it.nameWithoutExtension
+                                                // Anything else is irrelevant
+                                                else -> null
+                                            }
+                                        }
+                                        .toMutableSet()
 
-                            mangaDir.chapterDirs = chapterDirs
-                        }
+                                    mangaDir.chapterDirs = chapterDirs
+                                }
+                            }
+                        }.awaitAll()
                     }
                 }
                     .awaitAll()
@@ -437,6 +448,10 @@ class DownloadCache(
                 )
             }
         }
+    }
+
+    companion object {
+        private const val CHAPTER_LISTING_CONCURRENCY = 16
     }
 }
 
