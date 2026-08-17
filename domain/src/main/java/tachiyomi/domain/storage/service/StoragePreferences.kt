@@ -18,4 +18,10 @@ class StoragePreferences(
         Preference.appStateKey("storage_dir"),
         folderProvider.path(),
     )
+
+    // Direct filesystem access via MANAGE_EXTERNAL_STORAGE instead of the SAF picker.
+    val useDirectStorageAccess: Preference<Boolean> = preferenceStore.getBoolean(
+        Preference.appStateKey("use_direct_storage_access"),
+        false,
+    )
 }
