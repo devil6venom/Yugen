@@ -12,6 +12,7 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.core.util.insertSeparators
 import eu.kanade.domain.manga.interactor.UpdateManga
+import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.presentation.history.HistoryUiModel
 import eu.kanade.tachiyomi.util.lang.toLocalDate
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +41,6 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.SetMangaCategories
 import tachiyomi.domain.category.model.Category
-import tachiyomi.domain.chapter.interactor.GetChapter
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.history.interactor.GetHistory
 import tachiyomi.domain.history.interactor.GetNextChapters
@@ -51,6 +51,7 @@ import tachiyomi.domain.manga.interactor.GetDuplicateLibraryManga
 import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaWithChapterCount
+import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -61,9 +62,9 @@ import kotlin.time.Duration.Companion.seconds
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
 class HistoryViewModel(
+    private val addTracks: AddTracks,
     private val getCategories: GetCategories,
     private val getDuplicateLibraryManga: GetDuplicateLibraryManga,
-    private val getChapter: GetChapter,
     private val getHistory: GetHistory,
     private val getManga: GetManga,
     private val getNextChapters: GetNextChapters,
@@ -71,6 +72,7 @@ class HistoryViewModel(
     private val removeHistory: RemoveHistory,
     private val setMangaCategories: SetMangaCategories,
     private val updateManga: UpdateManga,
+    private val sourceManager: SourceManager,
 ) : ViewModel() {
 
     val snackbarHostState: SnackbarHostState = SnackbarHostState()
@@ -121,17 +123,15 @@ class HistoryViewModel(
         return withIOContext { getNextChapters.await(onlyUnread = false).firstOrNull() }
     }
 
-    fun resume(mangaId: Long, chapterId: Long) {
+    fun getNextChapterForManga(mangaId: Long, chapterId: Long) {
         viewModelScope.launchIO {
-            if (libraryPreferences.resumeLastSeenPage.get()) {
-                getChapter.await(chapterId)?.let {
-                    _events.send(Event.OpenChapter(it, it.lastPageRead.toInt()))
-                }
-            } else {
-                val chapter = getNextChapters.await(mangaId, chapterId, onlyUnread = false).firstOrNull()
-                _events.send(Event.OpenChapter(chapter))
-            }
+            sendNextChapterEvent(getNextChapters.await(mangaId, chapterId, onlyUnread = false))
         }
+    }
+
+    private suspend fun sendNextChapterEvent(chapters: List<Chapter>) {
+        val chapter = chapters.firstOrNull()
+        _events.send(Event.OpenChapter(chapter))
     }
 
     fun removeFromHistory(history: HistoryWithRelations) {
@@ -259,6 +259,9 @@ class HistoryViewModel(
                 // Choose a category
                 else -> showChangeCategoryDialog(manga)
             }
+
+            // Sync with tracking services if applicable
+            addTracks.bindEnhancedTrackers(manga, sourceManager.getOrStub(manga.source))
         }
     }
 
@@ -304,7 +307,7 @@ class HistoryViewModel(
     }
 
     sealed interface Event {
-        data class OpenChapter(val chapter: Chapter?, val page: Int? = null) : Event
+        data class OpenChapter(val chapter: Chapter?) : Event
         data object InternalError : Event
         data object HistoryCleared : Event
     }
