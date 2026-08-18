@@ -16,6 +16,7 @@ import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.domain.history.repository.HistoryRepository
+import java.util.Date
 
 @Inject
 @SingleIn(AppScope::class)
@@ -67,6 +68,16 @@ class HistoryRepositoryImpl(
     override suspend fun deleteAllHistory(): Boolean {
         return try {
             database.historyQueries.removeAllHistory()
+            true
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, throwable = e)
+            false
+        }
+    }
+
+    override suspend fun deleteHistoryInRange(startDate: Date, endDate: Date): Boolean {
+        return try {
+            database.historyQueries.deleteHistoryInRange(startDate, endDate)
             true
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, throwable = e)

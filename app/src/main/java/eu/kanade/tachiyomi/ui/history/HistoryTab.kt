@@ -18,8 +18,8 @@ import cafe.adriel.voyager.navigator.tab.TabOptions
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.history.HistoryScreen
-import eu.kanade.presentation.history.components.HistoryDeleteAllDialog
 import eu.kanade.presentation.history.components.HistoryDeleteDialog
+import eu.kanade.presentation.history.components.HistoryDeleteTimeRangeDialog
 import eu.kanade.presentation.manga.DuplicateMangaDialog
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
@@ -89,10 +89,10 @@ data object HistoryTab : Tab {
                     },
                 )
             }
-            is HistoryViewModel.Dialog.DeleteAll -> {
-                HistoryDeleteAllDialog(
+            is HistoryViewModel.Dialog.DeleteTimeRange -> {
+                HistoryDeleteTimeRangeDialog(
                     onDismissRequest = onDismissRequest,
-                    onDelete = viewModel::removeAllHistory,
+                    onDelete = viewModel::removeHistoryTimeRange,
                 )
             }
             is HistoryViewModel.Dialog.DuplicateManga -> {
