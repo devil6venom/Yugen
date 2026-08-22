@@ -12,10 +12,7 @@ import eu.kanade.domain.chapter.model.toSChapter
 import eu.kanade.domain.manga.model.getComicInfo
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.download.model.Download
-import eu.kanade.tachiyomi.data.library.LibraryUpdateNotifier
-import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.network.HttpException
-import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.util.storage.DiskUtil
@@ -192,15 +189,21 @@ class Downloader(
             val activeDownloadsFlow = combine(
                 queueState,
                 downloadPreferences.parallelSourceLimit.changes(),
-            ) { a, b -> a to b }.transformLatest { (queue, parallelCount) ->
+                downloadPreferences.parallelChapterLimit.changes(),
+            ) { queue, sourceLimit, chapterLimit ->
+                Triple(queue, sourceLimit, chapterLimit)
+            }.transformLatest { (queue, sourceLimit, chapterLimit) ->
                 while (true) {
                     val activeDownloads = queue.asSequence()
                         // Ignore completed downloads, leave them in the queue
                         .filter { it.status.value <= Download.State.DOWNLOADING.value }
                         .groupBy { it.source }
                         .toList()
-                        .take(parallelCount)
-                        .map { (_, downloads) -> downloads.first() }
+                        .take(sourceLimit)
+                        .flatMap { (_, downloads) ->
+                            downloads.take(chapterLimit)
+                        }
+                        .toList()
                     emit(activeDownloads)
 
                     if (activeDownloads.isEmpty()) break
