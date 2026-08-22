@@ -128,6 +128,46 @@
         <item name="colorSurfaceContainerLowest">@color/catppuccin_surfaceContainerLowest</item>
     </style>
 
+    <!--== Github Theme ==-->
+    <style name="Theme.Tachiyomi.Github">
+        <!-- Theme Colors -->
+        <item name="colorPrimary">@color/github_primary</item>
+        <item name="colorOnPrimary">@color/github_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/github_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/github_onPrimaryContainer</item>
+        <item name="colorPrimaryInverse">@color/github_inversePrimary</item>
+        <item name="colorSecondary">@color/github_secondary</item>
+        <item name="colorOnSecondary">@color/github_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/github_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/github_onSecondaryContainer</item>
+        <item name="colorTertiary">@color/github_tertiary</item>
+        <item name="colorOnTertiary">@color/github_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/github_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/github_onTertiaryContainer</item>
+        <item name="android:colorBackground">@color/github_background</item>
+        <item name="colorOnBackground">@color/github_onBackground</item>
+        <item name="colorSurface">@color/github_surface</item>
+        <item name="colorOnSurface">@color/github_onSurface</item>
+        <item name="colorSurfaceVariant">@color/github_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/github_onSurfaceVariant</item>
+        <item name="colorSurfaceInverse">@color/github_inverseSurface</item>
+        <item name="colorOnSurfaceInverse">@color/github_inverseOnSurface</item>
+        <item name="colorError">@color/github_error</item>
+        <item name="colorOnError">@color/github_onError</item>
+        <item name="colorErrorContainer">@color/github_errorContainer</item>
+        <item name="colorOnErrorContainer">@color/github_onErrorContainer</item>
+        <item name="colorOutline">@color/github_outline</item>
+        <item name="colorOutlineVariant">@color/github_outlineVariant</item>
+        <item name="scrimBackground">@color/github_scrim</item>
+        <item name="colorSurfaceBright">@color/github_surfaceBright</item>
+        <item name="colorSurfaceDim">@color/github_surfaceDim</item>
+        <item name="colorSurfaceContainer">@color/github_surfaceContainer</item>
+        <item name="colorSurfaceContainerHigh">@color/github_surfaceContainerHigh</item>
+        <item name="colorSurfaceContainerHighest">@color/github_surfaceContainerHighest</item>
+        <item name="colorSurfaceContainerLow">@color/github_surfaceContainerLow</item>
+        <item name="colorSurfaceContainerLowest">@color/github_surfaceContainerLowest</item>
+    </style>
+
     <!--== Gotham Theme ==-->
     <style name="Theme.Tachiyomi.Gotham">
         <!-- Theme Colors -->
