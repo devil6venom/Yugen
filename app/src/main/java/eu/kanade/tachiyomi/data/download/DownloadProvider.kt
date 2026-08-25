@@ -109,10 +109,8 @@ class DownloadProvider(
         mangaTitle: String,
         source: Source,
     ): UniFile? {
-        val mangaDir = findMangaDir(mangaTitle, source)
-        return getValidChapterDirNames(chapterName, chapterScanlator, chapterUrl).asSequence()
-            .mapNotNull { mangaDir?.findFile(it) }
-            .firstOrNull()
+        val mangaDir = findMangaDir(mangaTitle, source) ?: return null
+        return findChapterDir(mangaDir, chapterName, chapterScanlator, chapterUrl)
     }
 
     /**
@@ -125,10 +123,30 @@ class DownloadProvider(
     fun findChapterDirs(chapters: List<Chapter>, manga: Manga, source: Source): Pair<UniFile?, List<UniFile>> {
         val mangaDir = findMangaDir(manga.title, source) ?: return null to emptyList()
         return mangaDir to chapters.mapNotNull { chapter ->
-            getValidChapterDirNames(chapter.name, chapter.scanlator, chapter.url).asSequence()
-                .mapNotNull { mangaDir.findFile(it) }
-                .firstOrNull()
+            findChapterDir(mangaDir, chapter.name, chapter.scanlator, chapter.url)
         }
+    }
+
+    private fun findChapterDir(
+        mangaDir: UniFile,
+        chapterName: String,
+        chapterScanlator: String?,
+        chapterUrl: String,
+    ): UniFile? {
+        val exactMatch = getValidChapterDirNames(chapterName, chapterScanlator, chapterUrl).asSequence()
+            .mapNotNull { mangaDir.findFile(it) }
+            .firstOrNull()
+        if (exactMatch != null) return exactMatch
+
+        return mangaDir.listFiles().orEmpty()
+            .asSequence()
+            .filter { file ->
+                file.isDirectory || (file.isFile && file.name?.endsWith(".cbz") == true)
+            }
+            .filter { file ->
+                file.name?.let { isChapterDirNameForUrl(it, chapterUrl) } == true
+            }
+            .singleOrNull()
     }
 
     /**
@@ -176,6 +194,11 @@ class DownloadProvider(
         dirName = DiskUtil.buildValidFilename(dirName, DiskUtil.MAX_FILE_NAME_BYTES - 11, disallowNonAsciiFilenames)
         dirName += "_" + md5(chapterUrl).take(6)
         return dirName
+    }
+
+    internal fun isChapterDirNameForUrl(chapterDirName: String, chapterUrl: String): Boolean {
+        val normalizedName = chapterDirName.removeSuffix(".cbz")
+        return normalizedName.endsWith("_${md5(chapterUrl).take(6)}")
     }
 
     /**
