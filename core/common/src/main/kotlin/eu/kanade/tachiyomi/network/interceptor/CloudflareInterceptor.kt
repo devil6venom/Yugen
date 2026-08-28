@@ -2,14 +2,21 @@ package eu.kanade.tachiyomi.network.interceptor
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.view.KeyEvent
+import android.view.ViewGroup
 import android.webkit.JavascriptInterface
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.webkit.ScriptHandler
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import eu.kanade.tachiyomi.network.AndroidCookieJar
+import eu.kanade.tachiyomi.util.system.ForegroundActivity
 import eu.kanade.tachiyomi.util.system.isOutdated
 import eu.kanade.tachiyomi.util.system.toast
 import okhttp3.HttpUrl
@@ -20,6 +27,7 @@ import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 import java.io.IOException
 import java.util.concurrent.CountDownLatch
+import kotlin.concurrent.thread
 
 class CloudflareInterceptor(
     private val context: Context,
@@ -28,6 +36,33 @@ class CloudflareInterceptor(
 ) : WebViewInterceptor(context, defaultUserAgentProvider) {
 
     private val executor = ContextCompat.getMainExecutor(context)
+
+    // Fallback JavaScript solver for when view group isn't available (i.e. app in background)
+    private val iframeScript by lazy {
+        javaClass
+            .getResource("/assets/CloudflareSolverIframeScript.js")!!
+            .readText()
+            .replace("__SOLVER__", "__SOLVER_${(ULong.MIN_VALUE..ULong.MAX_VALUE).random()}__")
+    }
+
+    private val listenerScript = """
+        addEventListener("message", ({data}) => {
+            if (data?.source === "cloudflare-challenge") {
+                mihon?.postMessage(data.event);
+            }
+        })
+    """.trimIndent()
+
+    private fun injectIframeScript(webview: WebView): ScriptHandler? =
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+            WebViewCompat.addDocumentStartJavaScript(
+                webview,
+                iframeScript,
+                mutableSetOf("https://challenges.cloudflare.com"),
+            )
+        } else {
+            null
+        }
 
     override fun shouldIntercept(response: Response): Boolean {
         // Check if Cloudflare anti-bot is on
@@ -62,7 +97,7 @@ class CloudflareInterceptor(
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private fun resolveWithWebView(originalRequest: Request, oldNonce: String?) {
+    private fun resolveWithWebView(originalRequest: Request, originalNonce: String?) {
         // We need to lock this thread until the WebView finds the challenge solution url, because
         // OkHttp doesn't support asynchronous interceptors.
         val latch = CountDownLatch(1)
@@ -71,7 +106,11 @@ class CloudflareInterceptor(
 
         var challengeFound = false
         var cloudflareBypassed = false
+        var fail = false
         var isWebViewOutdated = false
+
+        var iframeScriptHandler: ScriptHandler? = null
+        var listenerScriptHandler: ScriptHandler? = null
 
         val origRequestUrl = originalRequest.url.toString()
         val headers = parseHeaders(originalRequest.headers)
@@ -79,21 +118,179 @@ class CloudflareInterceptor(
         executor.execute {
             webview = createWebView(originalRequest)
 
-            webview.addJavascriptInterface(
-                object {
-                    @Suppress("unused")
-                    @JavascriptInterface
-                    fun interactiveDetected() {
-                        // The challenge cannot be solved non-interactively, abort.
+            with(webview) {
+                isFocusable = false
+                isFocusableInTouchMode = false
+                descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+            }
+
+            if (ForegroundActivity.viewGroup == null) {
+                // view group not available, using fallback JavaScript solver
+                synchronized(webview) {
+                    if (iframeScriptHandler == null) {
+                        iframeScriptHandler = injectIframeScript(webview)
+                    }
+                }
+            }
+
+            // Inject fallback JavaScript solver
+            fun injectIframeScript() {
+                synchronized(webview) {
+                    if (iframeScriptHandler == null) {
+                        iframeScriptHandler = injectIframeScript(webview)
+                    }
+                }
+                if (iframeScriptHandler != null) {
+                    webview.loadUrl(origRequestUrl, headers)
+                } else {
+                    // Feature not supported, abort
+                    latch.countDown()
+                }
+            }
+
+            var complete = false
+
+            fun handleEvent(event: String) {
+                when (event) {
+                    "interactiveBegin" -> {
+                        if (iframeScriptHandler != null) {
+                            // Fallback solver is injected
+                            thread {
+                                // Fallback solver should complete within a short amount of time
+                                Thread.sleep(5000)
+                                if (!complete) {
+                                    latch.countDown()
+                                }
+                            }
+                            return
+                        }
+
+                        // Get the current view group
+                        val container = ForegroundActivity.viewGroup
+                        if (container == null) {
+                            injectIframeScript()
+                            return
+                        }
+
+                        executor.execute {
+                            val width = container.width.takeIf { it > 0 } ?: 1920
+                            val height = container.height.takeIf { it > 0 } ?: 1080
+
+                            // Set translationX to negative width.
+                            // The WebView should be offscreen even when the orientation changes.
+                            webview.translationX = -width.toFloat()
+
+                            // Attach the WebView to the view group so we can send key events.
+                            container.addView(webview, ViewGroup.LayoutParams(width, height))
+
+                            // Send Tab and Space to check the checkbox, and fall back to JavaScript solver
+                            // if dispatchKeyEvent fails.
+                            // Use a separate thread to unblock the main thread.
+                            thread {
+                                if (!webview.dispatchKeyEvent(
+                                        KeyEvent(
+                                            KeyEvent.ACTION_DOWN,
+                                            KeyEvent.KEYCODE_TAB,
+                                        ),
+                                    )
+                                ) {
+                                    injectIframeScript()
+                                    return@thread
+                                }
+                                Thread.sleep(100)
+                                if (!webview.dispatchKeyEvent(
+                                        KeyEvent(
+                                            KeyEvent.ACTION_UP,
+                                            KeyEvent.KEYCODE_TAB,
+                                        ),
+                                    )
+                                ) {
+                                    injectIframeScript()
+                                    return@thread
+                                }
+                                Thread.sleep(100)
+                                if (!webview.dispatchKeyEvent(
+                                        KeyEvent(
+                                            KeyEvent.ACTION_DOWN,
+                                            KeyEvent.KEYCODE_SPACE,
+                                        ),
+                                    )
+                                ) {
+                                    injectIframeScript()
+                                    return@thread
+                                }
+                                Thread.sleep(100)
+                                if (!webview.dispatchKeyEvent(
+                                        KeyEvent(
+                                            KeyEvent.ACTION_UP,
+                                            KeyEvent.KEYCODE_SPACE,
+                                        ),
+                                    )
+                                ) {
+                                    injectIframeScript()
+                                    return@thread
+                                }
+
+                                // Challenge should complete in a short amount of time
+                                Thread.sleep(5000)
+                                if (!complete) {
+                                    latch.countDown()
+                                }
+                            }
+                        }
+                    }
+                    "complete" -> {
+                        complete = true
+                        fail = false
+                    }
+                    "fail" -> {
+                        // Challenge failed, abort
+                        fail = true
                         latch.countDown()
                     }
-                },
-                "mihon",
-            )
+                }
+            }
 
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.JS_INJECTION_IN_FRAME_AND_WORLD)) {
+                // Use an isolated world so the page cannot see our bridge
+                val world = WebViewCompat.getExecutionWorld(webview, "mihon")
+                val allowedOriginRules = mutableSetOf("${originalRequest.url.scheme}://${originalRequest.url.host}")
+
+                WebViewCompat.addWebMessageListener(webview, "mihon", allowedOriginRules, world) {
+                        _,
+                        message,
+                        _,
+                        isMainFrame,
+                        _,
+                    ->
+                    if (isMainFrame) {
+                        message.data?.let { handleEvent(it) }
+                    }
+                }
+
+                // Listen for message events
+                listenerScriptHandler = WebViewCompat.addJavaScriptOnEvent(
+                    webview,
+                    listenerScript,
+                    WebViewCompat.INJECTION_EVENT_DOCUMENT_START,
+                    allowedOriginRules,
+                    world,
+                )
+            } else {
+                webview.addJavascriptInterface(
+                    object {
+                        @Suppress("unused")
+                        @JavascriptInterface
+                        fun postMessage(event: String) = handleEvent(event)
+                    },
+                    "mihon",
+                )
+            }
+
+            @SuppressLint("MissingOnRenderProcessGone")
             webview.webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView, url: String) {
-                    if (isBypassed(originalRequest.url, oldNonce)) {
+                    if (!fail && isBypassed(originalRequest.url, originalNonce)) {
                         cloudflareBypassed = true
                         latch.countDown()
                     }
@@ -102,16 +299,10 @@ class CloudflareInterceptor(
                         if (!challengeFound) {
                             // The first request didn't return the challenge, abort.
                             latch.countDown()
-                        } else {
-                            // Listen for an interactiveBegin event
+                        } else if (!WebViewFeature.isFeatureSupported(WebViewFeature.JS_INJECTION_IN_FRAME_AND_WORLD)) {
+                            // Listen for message events
                             view.evaluateJavascript(
-                                """
-                                    addEventListener("message", ({data}) => {
-                                        if (data?.source === "cloudflare-challenge" && data?.event === "interactiveBegin") {
-                                            mihon.interactiveDetected();
-                                        }
-                                    })
-                                """.trimIndent(),
+                                listenerScript,
                                 null,
                             )
                         }
@@ -133,6 +324,11 @@ class CloudflareInterceptor(
                         }
                     }
                 }
+
+                override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
+                    latch.countDown()
+                    return true
+                }
             }
 
             webview.loadUrl(origRequestUrl, headers)
@@ -145,14 +341,33 @@ class CloudflareInterceptor(
                 isWebViewOutdated = webview?.isOutdated() == true
             }
 
-            webview?.run {
-                stopLoading()
-                destroy()
+            webview?.let { webview ->
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.JS_INJECTION_IN_FRAME_AND_WORLD)) {
+                    WebViewCompat.removeWebMessageListener(
+                        webview,
+                        WebViewCompat.getExecutionWorld(webview, "mihon"),
+                        "mihon",
+                    )
+                } else {
+                    webview.removeJavascriptInterface("mihon")
+                }
+
+                iframeScriptHandler?.remove()
+                listenerScriptHandler?.remove()
+
+                (webview.parent as? ViewGroup)?.removeView(webview)
+
+                webview.run {
+                    stopLoading()
+                    destroy()
+                }
             }
         }
 
         // Throw exception if we failed to bypass Cloudflare
         if (!cloudflareBypassed) {
+            // Clear cf_clearance cookie on fail
+            cookieManager.remove(originalRequest.url, COOKIE_NAMES, 0)
             // Prompt user to update WebView if it seems too outdated
             if (isWebViewOutdated) {
                 context.toast(MR.strings.information_webview_outdated, Toast.LENGTH_LONG)

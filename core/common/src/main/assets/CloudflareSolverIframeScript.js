@@ -1,4 +1,5 @@
 (function __SOLVER__() {
+  "use strict";
 
   const stackFilter = function __SOLVER__(site) {
     return !site.toString().includes("__SOLVER__");
