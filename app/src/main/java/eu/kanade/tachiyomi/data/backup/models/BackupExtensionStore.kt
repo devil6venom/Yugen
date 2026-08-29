@@ -11,7 +11,6 @@ class BackupExtensionStore(
     @ProtoNumber(3) var badgeLabel: String?,
     @ProtoNumber(5) var signingKey: String,
     @ProtoNumber(4) var contactWebsite: String,
-    @ProtoNumber(6) var contactDiscord: String?,
     @ProtoNumber(7) var isLegacy: Boolean?,
     @ProtoNumber(8) var extensionListUrl: String?,
 )
@@ -23,7 +22,6 @@ val backupExtensionStoreMapper = { store: ExtensionStore ->
         badgeLabel = store.badgeLabel,
         signingKey = store.signingKey,
         contactWebsite = store.contact.website,
-        contactDiscord = store.contact.discord,
         isLegacy = store.isLegacy,
         extensionListUrl = store.extensionListUrl,
     )

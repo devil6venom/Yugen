@@ -13,8 +13,6 @@ class GetApplicationRelease(
 
         // Check if latest version is different from current version
         val isNewVersion = isNewVersion(
-            arguments.isNightly,
-            arguments.commitCount,
             arguments.versionName,
             release.version,
         )
@@ -25,39 +23,30 @@ class GetApplicationRelease(
     }
 
     private fun isNewVersion(
-        isNightly: Boolean,
-        commitCount: Int,
         versionName: String,
         versionTag: String,
     ): Boolean {
-        // Removes prefixes like "r" or "v"
-        val newVersion = versionTag.replace("[^\\d.]".toRegex(), "")
-        return if (isNightly) {
-            // Nightly builds: based on releases in "mihonapp/mihon-preview" repo
-            // tagged as something like "r1234"
-            newVersion.toInt() > commitCount
-        } else {
-            // Release builds: based on releases in "mihonapp/mihon" repo
-            // tagged as something like "v0.1.2"
-            val oldVersion = versionName.replace("[^\\d.]".toRegex(), "")
+        // Removes prefixes like "v" and any non-numeric characters except -
+        val oldVersion = versionName.replace("[^\\d.]".toRegex(), "").split("-")
+        val newVersion = versionTag.replace("[^\\d.]".toRegex(), "").split("-")
 
-            val newSemVer = newVersion.split(".").map { it.toInt() }
-            val oldSemVer = oldVersion.split(".").map { it.toInt() }
+        val maxLength = maxOf(oldVersion.size, newVersion.size)
+        for (i in 0 until maxLength) {
+            val oldPart = oldVersion.getOrNull(i)?.toIntOrNull() ?: 0
+            val newPart = newVersion.getOrNull(i)?.toIntOrNull() ?: 0
 
-            oldSemVer.mapIndexed { index, i ->
-                if (newSemVer[index] > i) {
-                    return true
-                }
+            if (newPart > oldPart) {
+                return true
+            } else if (newPart < oldPart) {
+                return false
             }
-
-            false
         }
+
+        return false
     }
 
     data class Arguments(
         val isFoss: Boolean,
-        val isNightly: Boolean,
-        val commitCount: Int,
         val versionName: String,
         val repository: String,
         val forceCheck: Boolean = false,

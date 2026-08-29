@@ -51,12 +51,7 @@ class LibraryPreferences(
     )
     val autoUpdateMangaRestrictions: Preference<Set<String>> = preferenceStore.getStringSet(
         "library_update_manga_restriction",
-        setOf(
-            MANGA_HAS_UNREAD,
-            MANGA_NON_COMPLETED,
-            MANGA_NON_READ,
-            MANGA_OUTSIDE_RELEASE_PERIOD,
-        ),
+        emptySet(),
     )
 
     val autoUpdateMetadata: Preference<Boolean> = preferenceStore.getBoolean("auto_update_metadata", false)
@@ -218,6 +213,11 @@ class LibraryPreferences(
     val disallowNonAsciiFilenames: Preference<Boolean> = preferenceStore.getBoolean(
         "disallow_non_ascii_filenames",
         false,
+    )
+
+    val resumeLastSeenPage: Preference<Boolean> = preferenceStore.getBoolean(
+        "pref_resume_last_seen_page",
+        true,
     )
 
     // endregion

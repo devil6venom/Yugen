@@ -22,7 +22,6 @@ data class NetworkExtensionStore(
     @Serializable
     data class Contact(
         @ProtoNumber(1) val website: String,
-        @ProtoNumber(2) val discord: String?,
     )
 
     @Serializable
@@ -84,7 +83,6 @@ data class NetworkExtensionStore(
             signingKey = signingKey,
             contact = ExtensionStore.Contact(
                 website = contact.website,
-                discord = contact.discord,
             ),
             isLegacy = false,
             extensionListUrl = extensionListUrl,

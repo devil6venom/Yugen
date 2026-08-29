@@ -35,6 +35,7 @@ object SettingsDownloadScreen : SearchableSettings {
 
         val downloadPreferences = remember { context.appGraph.downloadPreferences }
         val parallelSourceLimit by downloadPreferences.parallelSourceLimit.collectAsState()
+        val parallelChapterLimit by downloadPreferences.parallelChapterLimit.collectAsState()
         val parallelPageLimit by downloadPreferences.parallelPageLimit.collectAsState()
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
@@ -46,19 +47,31 @@ object SettingsDownloadScreen : SearchableSettings {
                 title = stringResource(MR.strings.save_chapter_as_cbz),
             ),
             Preference.PreferenceItem.SwitchPreference(
+                preference = downloadPreferences.saveAsPdf,
+                title = stringResource(MR.strings.save_as_pdf),
+                subtitle = stringResource(MR.strings.save_as_pdf_summary),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
                 preference = downloadPreferences.splitTallImages,
                 title = stringResource(MR.strings.split_tall_images),
                 subtitle = stringResource(MR.strings.split_tall_images_summary),
             ),
             Preference.PreferenceItem.SliderPreference(
                 value = parallelSourceLimit,
-                valueRange = 1..10,
+                valueRange = 1..20,
                 title = stringResource(MR.strings.pref_download_concurrent_sources),
                 onValueChanged = { downloadPreferences.parallelSourceLimit.set(it) },
             ),
             Preference.PreferenceItem.SliderPreference(
+                value = parallelChapterLimit,
+                valueRange = 1..20,
+                title = stringResource(MR.strings.pref_download_concurrent_chapters),
+                subtitle = stringResource(MR.strings.pref_download_concurrent_chapters_summary),
+                onValueChanged = { downloadPreferences.parallelChapterLimit.set(it) },
+            ),
+            Preference.PreferenceItem.SliderPreference(
                 value = parallelPageLimit,
-                valueRange = 1..15,
+                valueRange = 1..30,
                 title = stringResource(MR.strings.pref_download_concurrent_pages),
                 subtitle = stringResource(MR.strings.pref_download_concurrent_pages_summary),
                 onValueChanged = { downloadPreferences.parallelPageLimit.set(it) },

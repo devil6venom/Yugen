@@ -28,7 +28,6 @@ fun ExtensionStoresScreen(
     onClickCreate: () -> Unit,
     onCopy: (ExtensionStore) -> Unit,
     onOpenWebsite: (ExtensionStore) -> Unit,
-    onOpenDiscord: (ExtensionStore) -> Unit,
     onClickDelete: (ExtensionStore) -> Unit,
     onClickRefresh: () -> Unit,
     navigateUp: () -> Unit,
@@ -72,7 +71,6 @@ fun ExtensionStoresScreen(
                 PaddingValues(horizontal = MaterialTheme.padding.medium),
             onCopy = onCopy,
             onOpenWebsite = onOpenWebsite,
-            onOpenDiscord = onOpenDiscord,
             onClickDelete = onClickDelete,
         )
     }

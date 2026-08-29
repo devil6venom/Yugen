@@ -1,6 +1,9 @@
 package eu.kanade.tachiyomi.data.download
 
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.graphics.Rect
+import android.graphics.pdf.PdfDocument
 import com.hippo.unifile.UniFile
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
@@ -9,10 +12,7 @@ import eu.kanade.domain.chapter.model.toSChapter
 import eu.kanade.domain.manga.model.getComicInfo
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.download.model.Download
-import eu.kanade.tachiyomi.data.library.LibraryUpdateNotifier
-import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.network.HttpException
-import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.util.storage.DiskUtil
@@ -189,15 +189,21 @@ class Downloader(
             val activeDownloadsFlow = combine(
                 queueState,
                 downloadPreferences.parallelSourceLimit.changes(),
-            ) { a, b -> a to b }.transformLatest { (queue, parallelCount) ->
+                downloadPreferences.parallelChapterLimit.changes(),
+            ) { queue, sourceLimit, chapterLimit ->
+                Triple(queue, sourceLimit, chapterLimit)
+            }.transformLatest { (queue, sourceLimit, chapterLimit) ->
                 while (true) {
                     val activeDownloads = queue.asSequence()
                         // Ignore completed downloads, leave them in the queue
                         .filter { it.status.value <= Download.State.DOWNLOADING.value }
                         .groupBy { it.source }
                         .toList()
-                        .take(parallelCount)
-                        .map { (_, downloads) -> downloads.first() }
+                        .take(sourceLimit)
+                        .flatMap { (_, downloads) ->
+                            downloads.take(chapterLimit)
+                        }
+                        .toList()
                     emit(activeDownloads)
 
                     if (activeDownloads.isEmpty()) break
@@ -286,25 +292,6 @@ class Downloader(
 
             // Start downloader if needed
             if (autoStart && wasEmpty) {
-                val queuedDownloads = queueState.value.count { it.source !is UnmeteredSource }
-                val maxDownloadsFromSource = queueState.value
-                    .groupBy { it.source }
-                    .filterKeys { it !is UnmeteredSource }
-                    .maxOfOrNull { it.value.size }
-                    ?: 0
-                if (
-                    queuedDownloads > DOWNLOADS_QUEUED_WARNING_THRESHOLD ||
-                    maxDownloadsFromSource > CHAPTERS_PER_SOURCE_QUEUE_WARNING_THRESHOLD
-                ) {
-                    notifier.onWarning(
-                        context.stringResource(
-                            MR.strings.download_queue_size_warning,
-                            context.stringResource(MR.strings.app_name),
-                        ),
-                        WARNING_NOTIF_TIMEOUT_MS,
-                        NotificationHandler.openUrl(context, LibraryUpdateNotifier.HELP_WARNING_URL),
-                    )
-                }
                 DownloadJob.start(context)
             }
         }
@@ -395,14 +382,48 @@ class Downloader(
                 download.source,
             )
 
-            // Only rename the directory if it's downloaded
-            if (downloadPreferences.saveChaptersAsCBZ.get()) {
-                archiveChapter(mangaDir, chapterDirname, tmpDir)
-            } else {
-                tmpDir.renameTo(chapterDirname)
-            }
-            cache.addChapter(chapterDirname, mangaDir, download.manga)
+            val isPdfEnabled = downloadPreferences.saveAsPdf.get()
 
+            if (isPdfEnabled) {
+                val extensionDir = mangaDir.parentFile
+                val mangaNameSanitized = DiskUtil.buildValidFilename(download.manga.title)
+                val destFile = extensionDir?.createFile("$mangaNameSanitized.pdf")
+
+                if (destFile != null) {
+                    val document = PdfDocument()
+                    val imageFiles = tmpDir.listFiles()?.filter { it.isFile }?.sortedBy { it.name }
+
+                    imageFiles?.forEachIndexed { index, imgFile ->
+                        imgFile.openInputStream().use { stream ->
+                            val bitmap = BitmapFactory.decodeStream(stream)
+                            if (bitmap != null) {
+                                val pageInfo = PdfDocument.PageInfo.Builder(
+                                    bitmap.width,
+                                    bitmap.height,
+                                    index + 1,
+                                ).create()
+                                val page = document.startPage(pageInfo)
+                                page.canvas.drawBitmap(bitmap, null, Rect(0, 0, bitmap.width, bitmap.height), null)
+                                document.finishPage(page)
+                                bitmap.recycle()
+                            }
+                        }
+                    }
+                    destFile.openOutputStream().use { out ->
+                        document.writeTo(out)
+                    }
+                    document.close()
+                }
+                tmpDir.delete()
+            } else {
+                // Only rename the directory if it's downloaded
+                if (downloadPreferences.saveChaptersAsCBZ.get()) {
+                    archiveChapter(mangaDir, chapterDirname, tmpDir)
+                } else {
+                    tmpDir.renameTo(chapterDirname)
+                }
+                cache.addChapter(chapterDirname, mangaDir, download.manga)
+            }
             DiskUtil.createNoMediaFile(tmpDir, context)
 
             download.status = Download.State.DOWNLOADED
@@ -735,8 +756,8 @@ class Downloader(
     companion object {
         const val TMP_DIR_SUFFIX = "_tmp"
         const val WARNING_NOTIF_TIMEOUT_MS = 30_000L
-        const val CHAPTERS_PER_SOURCE_QUEUE_WARNING_THRESHOLD = 15
-        private const val DOWNLOADS_QUEUED_WARNING_THRESHOLD = 30
+        const val CHAPTERS_PER_SOURCE_QUEUE_WARNING_THRESHOLD = 600
+        private const val DOWNLOADS_QUEUED_WARNING_THRESHOLD = 600
     }
 }
 

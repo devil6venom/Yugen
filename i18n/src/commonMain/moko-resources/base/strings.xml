@@ -36,7 +36,6 @@
     <string name="label_extensions">Extensions</string>
     <string name="label_extension_info">Extension info</string>
     <string name="label_help">Help</string>
-    <string name="label_support_us">Support Us</string>
     <string name="label_default">Default</string>
     <string name="label_warning">Warning</string>
     <string name="label_auto">Auto</string>
@@ -112,6 +111,7 @@
     <string name="action_show_manga">Show entry</string>
     <string name="action_copy_to_clipboard">Copy to clipboard</string>
     <string name="action_copy_link">Copy link</string>
+    <string name="action_remove_history">Remove history</string>
     <!-- Do not translate "WebView" -->
     <string name="action_open_in_web_view">Open in WebView</string>
     <string name="action_web_view" translatable="false">WebView</string>
@@ -229,20 +229,22 @@
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
-    <string name="theme_monet">Dynamic</string>
     <string name="theme_catppuccin">Catppuccin</string>
-    <string name="theme_tokyonight">Tokyo Night</string>
+    <string name="theme_github">Github</string>
+    <string name="theme_gotham">Gotham</string>
     <string name="theme_greenapple">Green Apple</string>
     <string name="theme_lavender">Lavender</string>
     <string name="theme_midnightdusk">Midnight Dusk</string>
+    <string name="theme_monet">Dynamic</string>
     <string name="theme_monochrome">Monochrome</string>
     <string name="theme_nord">Nord</string>
     <string name="theme_strawberrydaiquiri">Strawberry Daiquiri</string>
     <string name="theme_tako">Tako</string>
     <string name="theme_tealturquoise">Teal &amp; Turquoise</string>
+    <string name="theme_tidalwave">Tidal Wave</string>
+    <string name="theme_tokyonight">Tokyo Night</string>
     <string name="theme_yinyang">Yin &amp; Yang</string>
     <string name="theme_yotsuba">Yotsuba</string>
-    <string name="theme_tidalwave">Tidal Wave</string>
     <string name="pref_dark_theme_pure_black">Pure black dark mode</string>
     <string name="pref_relative_format">Relative timestamps</string>
     <!-- "Today" instead of "2023-12-31" -->
@@ -322,6 +324,10 @@
     <string name="pref_mark_duplicate_read_chapter_read_new">After fetching new chapter</string>
 
     <string name="pref_hide_missing_chapter_indicators">Hide missing chapter indicators</string>
+    <string name="pref_resume_last_seen_page">Resume last seen page</string>
+    <string name="pref_resume_last_seen_page_summary">Resuming from History tab returns to the last
+        seen page, even the chapter was fully read, instead of opening next chapter.
+    </string>
     <string name="pref_disallow_non_ascii_filenames">Disallow non-ASCII filenames</string>
     <string name="pref_disallow_non_ascii_filenames_details">Ensures compatibility with certain storage media that don't support Unicode. When this is enabled, you'll need to manually rename source and manga folders by replacing non-ASCII characters with their lowercase UTF-8 hexadecimal representations. Chapter files don't need to be renamed.</string>
 
@@ -545,11 +551,19 @@
     <string name="auto_download_while_reading">Auto download while reading</string>
     <string name="download_ahead_info">Only works if the current chapter + the next one are already downloaded.</string>
     <string name="save_chapter_as_cbz">Save as CBZ archive</string>
+    <string name="save_as_pdf">Save One-Shots in PDF</string>
+    <string name="save_as_pdf_summary">Save as PDF to the folder with the manga name. The app will not show you as downloaded.</string>
     <string name="split_tall_images">Split tall images</string>
     <string name="split_tall_images_summary">Improves reader performance</string>
     <string name="pref_download_concurrent_sources">Concurrent source downloads</string>
     <string name="pref_download_concurrent_pages">Concurrent page downloads</string>
-    <string name="pref_download_concurrent_pages_summary">Pages downloaded simultaneously per source</string>
+    <string name="pref_download_concurrent_pages_summary">Pages downloaded simultaneously per
+        chapter
+    </string>
+    <string name="pref_download_concurrent_chapters">Concurrent chapter downloads</string>
+    <string name="pref_download_concurrent_chapters_summary">Chapters downloaded simultaneously per
+        source
+    </string>
 
     <!-- Tracking section -->
     <string name="tracking_guide">Tracking guide</string>
@@ -566,6 +580,12 @@
     <string name="pref_hide_in_library_items">Hide entries already in library</string>
 
       <!-- Data and storage section -->
+    <string name="pref_storage_access">Use legacy filesystem access</string>
+    <string name="pref_storage_access_summary">Bypasses the folder picker, needs "All files access" permission on Android 11+. Falls back to the folder picker if refused.</string>
+    <string name="pref_storage_access_permission">"All files access" permission is required to browse folders directly."</string>
+    <string name="pref_storage_access_grant_permission">Grant permission</string>
+    <string name="pref_storage_access_subdirectory">No subdirectory here</string>
+    <string name="pref_storage_access_pick_folder">Select this folder</string>
     <string name="pref_storage_location">Storage location</string>
     <string name="pref_storage_location_info">Used for automatic backups, chapter downloads, and local source.</string>
     <string name="pref_create_backup">Create backup</string>
@@ -715,6 +735,7 @@
     <string name="local_source">Local source</string>
     <string name="other_source">Other</string>
     <string name="last_used_source">Last used</string>
+    <string name="pref_show_last_used_source">Show "Last used" source</string>
     <string name="pinned_sources">Pinned</string>
     <string name="action_global_search_hint">Global search…</string>
     <string name="action_global_search_query">Search for \"%1$s\" globally</string>
@@ -893,6 +914,9 @@
     <string name="pref_clear_history">Clear history</string>
     <string name="clear_history_completed">History deleted</string>
     <string name="clear_history_confirmation">Are you sure? All history will be lost.</string>
+    <string name="delete_range_last_hour">Last hour</string>
+    <string name="delete_range_today_yesterday">Today and yesterday</string>
+    <string name="delete_range_everything">Everything</string>
 
     <!-- Source Screen -->
     <string name="source_empty_screen">No source found</string>
@@ -1066,18 +1090,4 @@
     <string name="migrationListScreen.migrateDialog.cancelLabel">Cancel</string>
     <string name="migrationListScreen.progressDialog.cancelLabel">Cancel</string>
     <string name="migrationListScreen.matchWithoutChapterToast">No chapters found, this entry cannot be used for migration</string>
-
-    <string name="supportUsScreen.perks">Patrons get access to exclusive channels, with more perks to come.</string>
-    <string name="supportUsScreen.donationPlatform.patreon">Patreon (preferred)</string>
-    <string name="supportUsScreen.donationPlatform.opencollective">OpenCollective</string>
-    <string name="supportUsScreen.currentlySupportedBy">Mihon is currently backed by %d+ patrons. We want to thank each and everyone of you. Let's make Mihon even better together.</string>
-    <string name="supportUsScreen.contactForDetailsMessage">For alternative options or any related questions, join our Discord server.</string>
-    <string name="supportUsScreen.contactPlatform">Discord</string>
-
-    <string name="donationCampaign.title">Enjoying the app?</string>
-    <string name="donationCampaign.paragraph1">Hi! I’m the main developer behind Mihon, and I’d like to ask you to consider supporting its development financially. With enough support, I’ll be able to work on Mihon full-time and focus on long-standing issues as well as highly requested features.</string>
-    <string name="donationCampaign.paragraph2">You can donate through either Patreon (preferred) or OpenCollective. If you have questions or would like to support using alternative methods, feel free to reach out to me through Mihon's Discord server.</string>
-    <string name="donationCampaign.paragraph3">Regardless, Mihon will continue to be maintained by me and the volunteers, and it will stay open source.</string>
-    <string name="donationCampaign.contactPlatform">Discord</string>
-    <string name="donationCampaign.dismiss">Dismiss</string>
 </resources>

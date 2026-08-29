@@ -58,6 +58,12 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
     private var currentPage: Any? = null
 
     /**
+     * The last background color calculated by the PagerPageHolder.
+     * Used to predict the background color of the next page to minimize flashing.
+     */
+    var lastAutomaticBackground: Int? = null
+
+    /**
      * Viewer chapters to set when the pager enters idle mode. Otherwise, if the view was settling
      * or dragging, there'd be a noticeable and annoying jump.
      */
@@ -143,6 +149,10 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
         config.navigationModeChangedListener = {
             val showOnStart = config.navigationOverlayOnStart || config.forceNavigationOverlay
             activity.binding.navigationOverlay.setNavigation(config.navigator, showOnStart)
+        }
+
+        config.doubleTapZoomChangedListener = {
+            pager.setDoubleTapGestureEnabled(it)
         }
     }
 

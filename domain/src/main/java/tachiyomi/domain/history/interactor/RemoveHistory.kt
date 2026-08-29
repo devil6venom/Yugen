@@ -3,6 +3,7 @@ package tachiyomi.domain.history.interactor
 import dev.zacsweers.metro.Inject
 import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.domain.history.repository.HistoryRepository
+import java.util.Date
 
 @Inject
 class RemoveHistory(
@@ -19,5 +20,9 @@ class RemoveHistory(
 
     suspend fun await(mangaId: Long) {
         repository.resetHistoryByMangaId(mangaId)
+    }
+
+    suspend fun awaitRange(startDate: Date, endDate: Date): Boolean {
+        return repository.deleteHistoryInRange(startDate, endDate)
     }
 }

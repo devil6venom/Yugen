@@ -159,6 +159,11 @@ private fun ColumnScope.PagerViewerSettings(viewModel: ReaderSettingsViewModel) 
             pref = viewModel.preferences.dualPageRotateToFitInvert,
         )
     }
+
+    CheckboxItem(
+        label = stringResource(MR.strings.pref_double_tap_zoom),
+        pref = viewModel.preferences.enableDoubleTapZoomPager,
+    )
 }
 
 @Composable

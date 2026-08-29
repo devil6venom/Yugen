@@ -16,6 +16,7 @@ import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.domain.history.repository.HistoryRepository
+import java.util.Date
 
 @Inject
 @SingleIn(AppScope::class)
@@ -74,13 +75,33 @@ class HistoryRepositoryImpl(
         }
     }
 
+    override suspend fun deleteHistoryInRange(startDate: Date, endDate: Date): Boolean {
+        return try {
+            database.historyQueries.deleteHistoryInRange(startDate, endDate)
+            true
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, throwable = e)
+            false
+        }
+    }
+
     override suspend fun upsertHistory(historyUpdate: HistoryUpdate) {
+        partialUpdate(historyUpdate)
+    }
+
+    override suspend fun upsertAllHistory(historyUpdate: List<HistoryUpdate>) {
+        partialUpdate(*historyUpdate.toTypedArray())
+    }
+
+    private suspend fun partialUpdate(vararg historyUpdates: HistoryUpdate) {
         try {
-            database.historyQueries.upsert(
-                historyUpdate.chapterId,
-                historyUpdate.readAt,
-                historyUpdate.sessionReadDuration,
-            )
+            historyUpdates.forEach { historyUpdate ->
+                database.historyQueries.upsert(
+                    chapterId = historyUpdate.chapterId,
+                    readAt = historyUpdate.readAt,
+                    time_read = historyUpdate.sessionReadDuration,
+                )
+            }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, throwable = e)
         }

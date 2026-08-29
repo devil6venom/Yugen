@@ -4,6 +4,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.icerock.moko.resources.StringResource
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -40,6 +41,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.SetMangaCategories
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.chapter.interactor.GetChapter
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.history.interactor.GetHistory
 import tachiyomi.domain.history.interactor.GetNextChapters
@@ -51,6 +53,10 @@ import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaWithChapterCount
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.MR
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 
 @Inject
@@ -60,6 +66,7 @@ class HistoryViewModel(
     private val addTracks: AddTracks,
     private val getCategories: GetCategories,
     private val getDuplicateLibraryManga: GetDuplicateLibraryManga,
+    private val getChapter: GetChapter,
     private val getHistory: GetHistory,
     private val getManga: GetManga,
     private val getNextChapters: GetNextChapters,
@@ -118,15 +125,17 @@ class HistoryViewModel(
         return withIOContext { getNextChapters.await(onlyUnread = false).firstOrNull() }
     }
 
-    fun getNextChapterForManga(mangaId: Long, chapterId: Long) {
+    fun resume(mangaId: Long, chapterId: Long) {
         viewModelScope.launchIO {
-            sendNextChapterEvent(getNextChapters.await(mangaId, chapterId, onlyUnread = false))
+            if (libraryPreferences.resumeLastSeenPage.get()) {
+                getChapter.await(chapterId)?.let {
+                    _events.send(Event.OpenChapter(it, it.lastPageRead.toInt()))
+                }
+            } else {
+                val chapter = getNextChapters.await(mangaId, chapterId, onlyUnread = false).firstOrNull()
+                _events.send(Event.OpenChapter(chapter))
+            }
         }
-    }
-
-    private suspend fun sendNextChapterEvent(chapters: List<Chapter>) {
-        val chapter = chapters.firstOrNull()
-        _events.send(Event.OpenChapter(chapter))
     }
 
     fun removeFromHistory(history: HistoryWithRelations) {
@@ -138,6 +147,30 @@ class HistoryViewModel(
     fun removeAllFromHistory(mangaId: Long) {
         viewModelScope.launchIO {
             removeHistory.await(mangaId)
+        }
+    }
+
+    fun removeHistoryInRange(startDate: Date, endDate: Date) {
+        viewModelScope.launchIO {
+            val result = removeHistory.awaitRange(startDate, endDate)
+            if (!result) return@launchIO
+            _events.send(Event.HistoryCleared)
+        }
+    }
+
+    fun removeHistoryTimeRange(timeRange: HistoryDeleteTimeRange) {
+        val now = Instant.now()
+        when (timeRange) {
+            HistoryDeleteTimeRange.LAST_HOUR -> {
+                val start = now.minus(1, ChronoUnit.HOURS)
+                removeHistoryInRange(Date.from(start), Date.from(now))
+            }
+
+            HistoryDeleteTimeRange.TODAY_AND_YESTERDAY -> {
+                val start = now.minus(2, ChronoUnit.DAYS)
+                removeHistoryInRange(Date.from(start), Date.from(now))
+            }
+            HistoryDeleteTimeRange.EVERYTHING -> removeAllHistory()
         }
     }
 
@@ -253,6 +286,12 @@ class HistoryViewModel(
         }
     }
 
+    enum class HistoryDeleteTimeRange(val timeRange: StringResource) {
+        LAST_HOUR(MR.strings.delete_range_last_hour),
+        TODAY_AND_YESTERDAY(MR.strings.delete_range_today_yesterday),
+        EVERYTHING(MR.strings.delete_range_everything),
+    }
+
     @Immutable
     data class State(
         val searchQuery: String? = null,
@@ -261,7 +300,7 @@ class HistoryViewModel(
     )
 
     sealed interface Dialog {
-        data object DeleteAll : Dialog
+        data object DeleteTimeRange : Dialog
         data class Delete(val history: HistoryWithRelations) : Dialog
         data class DuplicateManga(val manga: Manga, val duplicates: List<MangaWithChapterCount>) : Dialog
         data class ChangeCategory(
@@ -272,7 +311,7 @@ class HistoryViewModel(
     }
 
     sealed interface Event {
-        data class OpenChapter(val chapter: Chapter?) : Event
+        data class OpenChapter(val chapter: Chapter?, val page: Int? = null) : Event
         data object InternalError : Event
         data object HistoryCleared : Event
     }

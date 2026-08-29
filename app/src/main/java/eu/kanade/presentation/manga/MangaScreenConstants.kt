@@ -1,7 +1,6 @@
 package eu.kanade.presentation.manga
 
 enum class DownloadAction {
-    NEXT_1_CHAPTER,
     NEXT_5_CHAPTERS,
     NEXT_10_CHAPTERS,
     NEXT_25_CHAPTERS,
