@@ -7,11 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Label
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -21,10 +16,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.domain.extension.model.ExtensionStore
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.Label
+import mihon.icons.materialsymbols.rounded.ContentCopy
+import mihon.icons.materialsymbols.rounded.Delete
+import mihon.icons.materialsymbols.rounded.Public
+import mihon.icons.simpleicons.Discord
+import mihon.icons.simpleicons.SimpleIcons
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.icons.CustomIcons
 
 @Composable
 fun ExtensionStoresContent(
@@ -33,6 +34,7 @@ fun ExtensionStoresContent(
     paddingValues: PaddingValues,
     onCopy: (ExtensionStore) -> Unit,
     onOpenWebsite: (ExtensionStore) -> Unit,
+    onOpenDiscord: (ExtensionStore) -> Unit,
     onClickDelete: (ExtensionStore) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -48,6 +50,7 @@ fun ExtensionStoresContent(
                     modifier = Modifier.animateItem(),
                     store = it,
                     onOpenWebsite = { onOpenWebsite(it) },
+                    onOpenDiscord = { onOpenDiscord(it) },
                     onCopy = { onCopy(it) },
                     onDelete = { onClickDelete(it) },
                 )
@@ -60,6 +63,7 @@ fun ExtensionStoresContent(
 private fun ExtensionStoresListItem(
     store: ExtensionStore,
     onOpenWebsite: () -> Unit,
+    onOpenDiscord: () -> Unit,
     onCopy: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
@@ -77,7 +81,7 @@ private fun ExtensionStoresListItem(
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(imageVector = Icons.AutoMirrored.Outlined.Label, contentDescription = null)
+            Icon(imageVector = MaterialSymbols.AutoMirroredRounded.Label, contentDescription = null)
             Text(
                 text = store.name,
                 modifier = Modifier.padding(start = MaterialTheme.padding.medium),
@@ -91,21 +95,30 @@ private fun ExtensionStoresListItem(
         ) {
             IconButton(onClick = onOpenWebsite) {
                 Icon(
-                    imageVector = Icons.Outlined.Public,
+                    imageVector = MaterialSymbols.Rounded.Public,
                     contentDescription = stringResource(MR.strings.action_open_in_browser),
                 )
             }
 
+            if (store.contact.discord != null) {
+                IconButton(onClick = onOpenDiscord) {
+                    Icon(
+                        imageVector = SimpleIcons.Discord,
+                        contentDescription = null,
+                    )
+                }
+            }
+
             IconButton(onClick = onCopy) {
                 Icon(
-                    imageVector = Icons.Outlined.ContentCopy,
+                    imageVector = MaterialSymbols.Rounded.ContentCopy,
                     contentDescription = stringResource(MR.strings.action_copy_to_clipboard),
                 )
             }
 
             IconButton(onClick = onDelete) {
                 Icon(
-                    imageVector = Icons.Outlined.Delete,
+                    imageVector = MaterialSymbols.Rounded.Delete,
                     contentDescription = stringResource(MR.strings.action_delete),
                 )
             }
