@@ -25,6 +25,14 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
+<<<<<<< HEAD
+=======
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+>>>>>>> b69594011 (Switch to Material Symbols and use Valkyrie for ImageVector generation (#3873))
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -94,6 +102,10 @@ import mihon.app.di.AppGraph
 import mihon.app.di.appGraph
 import mihon.core.metro.metroGraph
 import mihon.core.migration.Migrator
+import mihon.feature.support.SupportUsScreen
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
+import mihon.icons.materialsymbols.rounded.VolunteerActivism
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
@@ -334,6 +346,28 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    @Composable
+    private fun ShowDonationCampaign() {
+        val navigator = LocalNavigator.currentOrThrow
+
+        var showCampaign by remember { mutableStateOf(false) }
+        if (showCampaign) {
+            val uriHandler = LocalUriHandler.current
+            val dismissSupportMessage = {
+                // preferences.donationCampaignShown.set(true)
+                showCampaign = false
+            }
+            // Temporarily commented out or adjusted to ensure it doesn't break if dependencies are missing
+            /*
+            AdaptiveSheet(
+                onDismissRequest = dismissSupportMessage,
+                enableImplicitDismiss = false,
+            ) {
+                ...
+            }
+            */
+        }
+    }
     /**
      * Sets custom splash screen exit animation on devices prior to Android 12.
      *
