@@ -244,6 +244,7 @@
     <string name="pref_dark_theme_pure_black">Pure black dark mode</string>
     <string name="pref_bold_text">Bold text</string>
     <string name="pref_bold_text_summary">Increase font weight across the app for better readability</string>
+    <string name="recent_searches">Recent searches</string>
     <string name="pref_relative_format">Relative timestamps</string>
     <!-- "Today" instead of "2023-12-31" -->
     <string name="pref_relative_format_summary">\"%1$s\" instead of \"%2$s\"</string>

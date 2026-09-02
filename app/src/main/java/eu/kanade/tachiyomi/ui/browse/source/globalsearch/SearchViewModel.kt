@@ -29,6 +29,8 @@ import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
 import java.util.concurrent.Executors
 
+private const val RECENT_SEARCHES_LIMIT = 10
+
 abstract class SearchViewModel(
     initialState: State = State(),
     sourcePreferences: SourcePreferences,
@@ -72,6 +74,11 @@ abstract class SearchViewModel(
         viewModelScope.launch {
             preferences.globalSearchFilterState.changes().collectLatest { onlyShowHasResults ->
                 state.update { it.copy(onlyShowHasResults = onlyShowHasResults) }
+            }
+        }
+        viewModelScope.launch {
+            preferences.recentSearches.changes().collectLatest { recents ->
+                state.update { it.copy(recentSearches = recents.toList()) }
             }
         }
     }
@@ -130,6 +137,12 @@ abstract class SearchViewModel(
         val sourceFilter = state.value.sourceFilter
 
         if (query.isNullOrBlank()) return
+
+        preferences.recentSearches.set(
+            (listOf(query) + preferences.recentSearches.get().filter { it != query })
+                .take(RECENT_SEARCHES_LIMIT)
+                .toSet(),
+        )
 
         val sameQuery = this.lastQuery == query
         if (sameQuery && this.lastSourceFilter == sourceFilter) return
@@ -218,6 +231,7 @@ abstract class SearchViewModel(
         val onlyShowHasResults: Boolean = false,
         val items: Map<Source, SearchItemResult> = mapOf(),
         val dialog: Dialog? = null,
+        val recentSearches: List<String> = emptyList(),
     ) {
         val progress: Int = items.count { it.value !is SearchItemResult.Loading }
         val total: Int = items.size
