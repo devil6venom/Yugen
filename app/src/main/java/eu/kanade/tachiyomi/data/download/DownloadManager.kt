@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.drop
@@ -175,7 +176,7 @@ class DownloadManager(
             throw Exception(context.stringResource(MR.strings.page_list_empty_error))
         }
 
-        return files.sortedBy { it.name }
+        return files.sortedWith(compareBy(String::compareToCaseInsensitiveNaturalOrder) { it.name })
             .mapIndexed { i, file ->
                 Page(i, uri = file.uri).apply { status = Page.State.Ready }
             }
