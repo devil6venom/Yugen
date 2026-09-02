@@ -80,6 +80,8 @@ class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boolean = tr
         recycler.itemAnimator = null
         recycler.layoutManager = layoutManager
         recycler.adapter = adapter
+        applyWebtoonSmoothScroll()
+        config.smoothScrollChangedListener = { applyWebtoonSmoothScroll() }
         recycler.addOnScrollListener(
             object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -270,6 +272,18 @@ class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boolean = tr
                 is ReaderPage -> onPageSelected(item, allowPreload)
                 is ChapterTransition -> onTransitionSelected(item)
             }
+        }
+    }
+
+    /**
+     * Applies the smooth-scroll preference to the recycler view by removing the edge
+     * overscroll bounce for a more continuous scrolling feel in webtoon mode.
+     */
+    private fun applyWebtoonSmoothScroll() {
+        recycler.overScrollMode = if (config.smoothScroll) {
+            View.OVER_SCROLL_ALWAYS
+        } else {
+            View.OVER_SCROLL_NEVER
         }
     }
 
