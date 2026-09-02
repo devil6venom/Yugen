@@ -74,6 +74,11 @@ class SourcePreferences(
         false,
     )
 
+    val recentSearches: Preference<Set<String>> = preferenceStore.getStringSet(
+        Preference.appStateKey("recent_searches"),
+        emptySet(),
+    )
+
     val migrationSources: Preference<List<Long>> = preferenceStore.getLongArray("migration_sources", emptyList())
 
     val migrationFlags: Preference<Set<MigrationFlag>> = preferenceStore.getObjectFromInt(

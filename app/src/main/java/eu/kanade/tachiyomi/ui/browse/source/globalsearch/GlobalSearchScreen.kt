@@ -66,6 +66,11 @@ class GlobalSearchScreen(
                 },
                 onClickItem = { navigator.push(MangaScreen(it.id, true)) },
                 onLongClickItem = { navigator.push(MangaScreen(it.id, true)) },
+                recentSearches = state.recentSearches,
+                onRecentSearchClick = {
+                    viewModel.updateSearchQuery(it)
+                    viewModel.search()
+                },
             )
         }
     }
