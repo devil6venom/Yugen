@@ -248,10 +248,6 @@ dependencies {
         exclude(module = "image-decoder")
     }
     implementation(libs.image.decoder)
-    implementation(libs.image.decoder2)
-
-    implementation(libs.webgpuviewer)
-    implementation(libs.kim)
 
     // UI libraries
     implementation(libs.material)
