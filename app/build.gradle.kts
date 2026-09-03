@@ -104,6 +104,7 @@ android {
                 "kotlin-tooling-metadata.json",
                 "LICENSE.txt",
                 "META-INF/**/*.properties",
+                "META-INF/**/LICENSE",
                 "META-INF/**/LICENSE.txt",
                 "META-INF/*.properties",
                 "META-INF/*.version",
@@ -247,6 +248,7 @@ dependencies {
         exclude(module = "image-decoder")
     }
     implementation(libs.image.decoder)
+    implementation(libs.image.decoder2)
 
     implementation(libs.webgpuviewer)
     implementation(libs.kim)
