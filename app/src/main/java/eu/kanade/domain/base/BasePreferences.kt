@@ -5,6 +5,7 @@ import dev.icerock.moko.resources.StringResource
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.util.system.GLUtil
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.i18n.MR
@@ -38,4 +39,14 @@ class BasePreferences(
     }
 
     val highQualityRenderer: Preference<Boolean> = preferenceStore.getBoolean("pref_high_quality_renderer_key", false)
+
+    val hardwareBitmapThreshold: Preference<Int> = preferenceStore.getInt(
+        "pref_hardware_bitmap_threshold",
+        GLUtil.SAFE_TEXTURE_LIMIT,
+    )
+
+    val alwaysDecodeLongStripWithSSIV: Preference<Boolean> = preferenceStore.getBoolean(
+        "pref_always_decode_long_strip_with_ssiv",
+        false,
+    )
 }
