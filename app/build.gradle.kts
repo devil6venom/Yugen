@@ -248,7 +248,6 @@ dependencies {
         exclude(module = "image-decoder")
     }
     implementation(libs.image.decoder)
-    implementation(libs.image.decoder2)
 
     // UI libraries
     implementation(libs.material)
