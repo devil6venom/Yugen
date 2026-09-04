@@ -24,6 +24,7 @@ import coil3.util.DebugLogger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.createGraphFactory
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.track.service.DelayedTrackingUpdateJob
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.tachiyomi.crash.CrashActivity
@@ -109,6 +110,10 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         Injekt = InjektScope(MetroInjektRegistrar(application = this, graphProvider = this))
         graph.inject(this)
+
+        if (packageName == getProcessName()) {
+            DelayedTrackingUpdateJob.scheduleCleanup(this)
+        }
 
         GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)
 

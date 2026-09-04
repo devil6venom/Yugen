@@ -12,7 +12,6 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.core.util.insertSeparators
 import eu.kanade.domain.manga.interactor.UpdateManga
-import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.presentation.history.HistoryUiModel
 import eu.kanade.tachiyomi.util.lang.toLocalDate
 import kotlinx.coroutines.Dispatchers
@@ -52,7 +51,6 @@ import tachiyomi.domain.manga.interactor.GetDuplicateLibraryManga
 import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaWithChapterCount
-import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -63,7 +61,6 @@ import kotlin.time.Duration.Companion.seconds
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
 class HistoryViewModel(
-    private val addTracks: AddTracks,
     private val getCategories: GetCategories,
     private val getDuplicateLibraryManga: GetDuplicateLibraryManga,
     private val getChapter: GetChapter,
@@ -74,7 +71,6 @@ class HistoryViewModel(
     private val removeHistory: RemoveHistory,
     private val setMangaCategories: SetMangaCategories,
     private val updateManga: UpdateManga,
-    private val sourceManager: SourceManager,
 ) : ViewModel() {
 
     val snackbarHostState: SnackbarHostState = SnackbarHostState()
@@ -263,9 +259,6 @@ class HistoryViewModel(
                 // Choose a category
                 else -> showChangeCategoryDialog(manga)
             }
-
-            // Sync with tracking services if applicable
-            addTracks.bindEnhancedTrackers(manga, sourceManager.getOrStub(manga.source))
         }
     }
 

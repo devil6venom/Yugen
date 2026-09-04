@@ -23,8 +23,6 @@ import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.readerOrientation
 import eu.kanade.domain.manga.model.readingMode
 import eu.kanade.domain.source.interactor.GetIncognitoState
-import eu.kanade.domain.track.interactor.TrackChapter
-import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
@@ -106,8 +104,6 @@ class ReaderViewModel(
     val readerPreferences: ReaderPreferences,
     private val basePreferences: BasePreferences,
     private val downloadPreferences: DownloadPreferences,
-    private val trackPreferences: TrackPreferences,
-    private val trackChapter: TrackChapter,
     private val getManga: GetManga,
     private val getChaptersByMangaId: GetChaptersByMangaId,
     private val getNextChapters: GetNextChapters,
@@ -470,8 +466,8 @@ class ReaderViewModel(
 
     /**
      * Called every time a page changes on the reader. Used to mark the flag of chapters being
-     * read, update tracking services, enqueue downloaded chapter deletion, and updating the active chapter if this
-     * [page]'s chapter is different from the currently active.
+     * read, enqueue downloaded chapter deletion, and update the active chapter if this [page]'s
+     * chapter is different from the currently active.
      */
     fun onPageSelected(page: ReaderPage) {
         // InsertPage doesn't change page progress
@@ -596,7 +592,6 @@ class ReaderViewModel(
 
     private suspend fun updateChapterProgressOnComplete(readerChapter: ReaderChapter) {
         readerChapter.chapter.read = true
-        updateTrackChapterRead(readerChapter)
         deleteChapterIfNeeded(readerChapter)
 
         val markDuplicateAsRead = libraryPreferences.markDuplicateReadChapterAsRead.get()
@@ -938,21 +933,6 @@ class ReaderViewModel(
     sealed interface SaveImageResult {
         class Success(val uri: Uri) : SaveImageResult
         class Error(val error: Throwable) : SaveImageResult
-    }
-
-    /**
-     * Starts the service that updates the last chapter read in sync services. This operation
-     * will run in a background thread and errors are ignored.
-     */
-    private fun updateTrackChapterRead(readerChapter: ReaderChapter) {
-        if (incognitoMode) return
-        if (!trackPreferences.autoUpdateTrack.get()) return
-
-        val manga = manga ?: return
-
-        viewModelScope.launchNonCancellable {
-            trackChapter.await(context, manga.id, readerChapter.chapter.chapter_number.toDouble())
-        }
     }
 
     /**

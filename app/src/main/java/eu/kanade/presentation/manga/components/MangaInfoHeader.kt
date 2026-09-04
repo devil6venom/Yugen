@@ -90,7 +90,6 @@ import mihon.icons.materialsymbols.rounded.Pause
 import mihon.icons.materialsymbols.rounded.Person
 import mihon.icons.materialsymbols.rounded.Public
 import mihon.icons.materialsymbols.rounded.Schedule
-import mihon.icons.materialsymbols.rounded.Sync
 import mihon.icons.materialsymbols.rounded.Warning
 import mihon.icons.materialsymbols.roundedfilled.Favorite
 import org.intellij.markdown.MarkdownElementTypes
@@ -173,13 +172,11 @@ fun MangaInfoBox(
 @Composable
 fun MangaActionRow(
     favorite: Boolean,
-    trackingCount: Int,
     nextUpdate: Instant?,
     isUserIntervalMode: Boolean,
     onAddToLibraryClicked: () -> Unit,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onTrackingClicked: () -> Unit,
     onEditIntervalClicked: (() -> Unit)?,
     onEditCategory: (() -> Unit)?,
     modifier: Modifier = Modifier,
@@ -221,16 +218,6 @@ fun MangaActionRow(
             icon = MaterialSymbols.Rounded.HourglassEmpty,
             color = if (isUserIntervalMode) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
             onClick = { onEditIntervalClicked?.invoke() },
-        )
-        MangaActionButton(
-            title = if (trackingCount == 0) {
-                stringResource(MR.strings.manga_tracking_tab)
-            } else {
-                pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
-            },
-            icon = if (trackingCount == 0) MaterialSymbols.Rounded.Sync else MaterialSymbols.Rounded.Done,
-            color = if (trackingCount == 0) defaultActionButtonColor else MaterialTheme.colorScheme.primary,
-            onClick = onTrackingClicked,
         )
         if (onWebViewClicked != null) {
             MangaActionButton(

@@ -266,6 +266,17 @@ class DownloadManager(
     }
 
     /**
+     * Deletes the directory of a downloaded manga after resolving its source.
+     *
+     * @param manga the manga to delete.
+     * @param removeQueued whether to also remove queued downloads.
+     */
+    suspend fun deleteManga(manga: Manga, removeQueued: Boolean = true) {
+        val source = sourceManager.get(manga.source) ?: return
+        deleteManga(manga, source, removeQueued)
+    }
+
+    /**
      * Deletes the directory of a downloaded manga.
      *
      * @param manga the manga to delete.

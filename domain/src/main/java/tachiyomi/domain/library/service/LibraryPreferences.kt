@@ -95,11 +95,6 @@ class LibraryPreferences(
         TriState.DISABLED,
     )
 
-    fun filterTracking(id: Int): Preference<TriState> = preferenceStore.getEnum(
-        "pref_filter_library_tracked_${id}_v2",
-        TriState.DISABLED,
-    )
-
     // endregion
 
     // region Badges

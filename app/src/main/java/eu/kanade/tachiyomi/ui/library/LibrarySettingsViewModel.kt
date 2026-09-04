@@ -7,9 +7,6 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.domain.base.BasePreferences
-import eu.kanade.tachiyomi.data.track.TrackerManager
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.getAndSet
@@ -20,7 +17,6 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.service.LibraryPreferences
-import kotlin.time.Duration.Companion.seconds
 
 @Inject
 @ViewModelKey
@@ -30,24 +26,12 @@ class LibrarySettingsViewModel(
     val libraryPreferences: LibraryPreferences,
     private val setDisplayMode: SetDisplayMode,
     private val setSortModeForCategory: SetSortModeForCategory,
-    trackerManager: TrackerManager,
 ) : ViewModel() {
-
-    val trackersFlow = trackerManager.loggedInTrackersFlow()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5.seconds.inWholeMilliseconds),
-            initialValue = trackerManager.loggedInTrackers(),
-        )
 
     fun toggleFilter(preference: (LibraryPreferences) -> Preference<TriState>) {
         preference(libraryPreferences).getAndSet {
             it.next()
         }
-    }
-
-    fun toggleTracker(id: Int) {
-        toggleFilter { libraryPreferences.filterTracking(id) }
     }
 
     fun setDisplayMode(mode: LibraryDisplayMode) {

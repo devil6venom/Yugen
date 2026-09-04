@@ -133,17 +133,6 @@ class RestoreBackupScreen(
                                         prefix = "- ",
                                     )
                                 }
-                                if (error.trackers.isNotEmpty()) {
-                                    appendLine()
-                                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                                        appendLine(stringResource(MR.strings.backup_restore_missing_trackers))
-                                    }
-                                    error.trackers.joinTo(
-                                        this,
-                                        separator = "\n- ",
-                                        prefix = "- ",
-                                    )
-                                }
                             }
 
                             is InvalidRestore -> {
@@ -225,9 +214,9 @@ class RestoreBackupViewModel(
             return
         }
 
-        if (results.missingSources.isNotEmpty() || results.missingTrackers.isNotEmpty()) {
+        if (results.missingSources.isNotEmpty()) {
             setError(
-                error = MissingRestoreComponents(uri, results.missingSources, results.missingTrackers),
+                error = MissingRestoreComponents(results.missingSources),
                 canRestore = true,
             )
             return
@@ -254,9 +243,7 @@ class RestoreBackupViewModel(
 }
 
 private data class MissingRestoreComponents(
-    val uri: Uri,
     val sources: List<String>,
-    val trackers: List<String>,
 )
 
 private data class InvalidRestore(
