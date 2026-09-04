@@ -1,7 +1,6 @@
 package mihon.app.di.injekt
 
 import dev.zacsweers.metro.Inject
-import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.network.JavaScriptEngine
@@ -24,7 +23,6 @@ class MetroInteropModule(
     private val javaScriptEngine: JavaScriptEngine,
 
     private val preferenceStore: PreferenceStore,
-    private val trackPreferences: TrackPreferences,
 
     private val extensionManager: ExtensionManager,
 
@@ -40,7 +38,6 @@ class MetroInteropModule(
         addSingleton(javaScriptEngine)
 
         addSingleton(preferenceStore)
-        addSingleton(trackPreferences)
 
         addSingleton(extensionManager)
 

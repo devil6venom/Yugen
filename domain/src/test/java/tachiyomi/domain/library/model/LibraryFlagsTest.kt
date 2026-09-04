@@ -54,4 +54,20 @@ class LibraryFlagsTest {
 
         flag shouldBe 0b01000000
     }
+
+    @Test
+    fun `Tracker mean flag falls back to alphabetical`() {
+        val sort = LibrarySort.valueOf(
+            LibrarySort.Type.TrackerMean.flag + LibrarySort.Direction.Descending.flag,
+        )
+
+        sort shouldBe LibrarySort(LibrarySort.Type.Alphabetical, LibrarySort.Direction.Descending)
+    }
+
+    @Test
+    fun `Serialized tracker mean falls back to alphabetical`() {
+        val sort = LibrarySort.deserialize("TRACKER_MEAN,ASCENDING")
+
+        sort shouldBe LibrarySort(LibrarySort.Type.Alphabetical, LibrarySort.Direction.Ascending)
+    }
 }

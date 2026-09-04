@@ -2,20 +2,18 @@ package eu.kanade.tachiyomi.data.backup
 
 import android.net.Uri
 import dev.zacsweers.metro.Inject
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import tachiyomi.domain.source.service.SourceManager
 
 @Inject
 class BackupFileValidator(
     private val sourceManager: SourceManager,
-    private val trackerManager: TrackerManager,
     private val backupDecoder: BackupDecoder,
 ) {
 
     /**
      * Checks for critical backup file data.
      *
-     * @return List of missing sources or missing trackers.
+     * @return List of missing sources.
      */
     suspend fun validate(uri: Uri): Results {
         val backup = try {
@@ -38,21 +36,10 @@ class BackupFileValidator(
             .distinct()
             .sorted()
 
-        val trackers = backup.backupManga
-            .flatMap { it.tracking }
-            .map { it.syncId }
-            .distinct()
-        val missingTrackers = trackers
-            .mapNotNull { trackerManager.get(it.toLong()) }
-            .filter { !it.isLoggedIn }
-            .map { it.name }
-            .sorted()
-
-        return Results(missingSources, missingTrackers)
+        return Results(missingSources)
     }
 
     data class Results(
         val missingSources: List<String>,
-        val missingTrackers: List<String>,
     )
 }

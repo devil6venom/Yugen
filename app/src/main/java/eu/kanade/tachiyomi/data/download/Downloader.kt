@@ -58,7 +58,6 @@ import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.i18n.MR
 import java.io.File
 import java.util.Locale
@@ -80,7 +79,6 @@ class Downloader(
     private val downloadPreferences: DownloadPreferences,
     private val xml: XML,
     private val getCategories: GetCategories,
-    private val getTracks: GetTracks,
     private val store: DownloadStore,
     private val notifier: DownloadNotifier,
 ) {
@@ -651,12 +649,7 @@ class Downloader(
         source: HttpSource,
     ) {
         val categories = getCategories.await(manga.id).map { it.name.trim() }.takeUnless { it.isEmpty() }
-        val urls = getTracks.await(manga.id)
-            .mapNotNull { track ->
-                track.remoteUrl.takeUnless { url -> url.isBlank() }?.trim()
-            }
-            .plus(source.getChapterUrl(chapter.toSChapter()).trim())
-            .distinct()
+        val urls = listOf(source.getChapterUrl(chapter.toSChapter()).trim())
 
         val comicInfo = getComicInfo(
             manga,
