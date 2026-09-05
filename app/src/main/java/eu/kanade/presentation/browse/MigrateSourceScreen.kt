@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.domain.source.interactor.SetMigrateSorting
 import eu.kanade.presentation.browse.components.BaseSourceItem
+import eu.kanade.presentation.browse.components.LanguageBadge
 import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrateSourceViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -179,12 +180,9 @@ private fun MigrateSourceItem(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (sourceLangString != null) {
-                        Text(
+                        LanguageBadge(
                             modifier = Modifier.secondaryItemAlpha(),
-                            text = sourceLangString,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.bodySmall,
+                            lang = source.lang,
                         )
                     }
                     if (source.isStub) {

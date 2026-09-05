@@ -101,7 +101,7 @@ object SettingsDataScreen : SearchableSettings {
         IconButton(onClick = { uriHandler.openUri(HELP_URL) }) {
             Icon(
                 imageVector = MaterialSymbols.AutoMirroredRounded.Help,
-                contentDescription = stringResource(MR.strings.label_help),
+                contentDescription = stringResource(MR.strings.tracking_guide),
             )
         }
     }

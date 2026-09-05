@@ -38,6 +38,7 @@ import kotlin.time.Duration.Companion.seconds
 internal fun BasePreferenceWidget(
     modifier: Modifier = Modifier,
     title: String? = null,
+    titleContent: @Composable (() -> Unit)? = null,
     subcomponent: @Composable (ColumnScope.() -> Unit)? = null,
     icon: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
@@ -64,7 +65,11 @@ internal fun BasePreferenceWidget(
                 .weight(1f)
                 .padding(vertical = PrefsVerticalPadding),
         ) {
-            if (!title.isNullOrBlank()) {
+            if (titleContent != null) {
+                Box(modifier = Modifier.padding(horizontal = PrefsHorizontalPadding)) {
+                    titleContent()
+                }
+            } else if (!title.isNullOrBlank()) {
                 Text(
                     modifier = Modifier.padding(horizontal = PrefsHorizontalPadding),
                     text = title,

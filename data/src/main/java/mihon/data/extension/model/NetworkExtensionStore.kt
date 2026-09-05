@@ -87,6 +87,7 @@ data class NetworkExtensionStore(
             ),
             isLegacy = false,
             extensionListUrl = extensionListUrl,
+            enabled = true,
         )
     }
 }

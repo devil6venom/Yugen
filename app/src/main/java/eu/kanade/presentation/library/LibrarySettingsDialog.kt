@@ -1,29 +1,42 @@
 package eu.kanade.presentation.library
 
 import android.content.res.Configuration
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.icons.materialsymbols.rounded.Favorite
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
+import tachiyomi.domain.library.model.LibraryGroup
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.model.sort
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -50,6 +63,7 @@ fun LibrarySettingsDialog(
             stringResource(MR.strings.action_filter),
             stringResource(MR.strings.action_sort),
             stringResource(MR.strings.action_display),
+            stringResource(MR.strings.action_group_by),
         ),
     ) { page ->
         Column(
@@ -66,6 +80,9 @@ fun LibrarySettingsDialog(
                     viewModel = viewModel,
                 )
                 2 -> DisplayPage(
+                    viewModel = viewModel,
+                )
+                3 -> GroupPage(
                     viewModel = viewModel,
                 )
             }
@@ -124,6 +141,33 @@ private fun ColumnScope.FilterPage(
             onClick = { viewModel.toggleFilter(LibraryPreferences::filterIntervalCustom) },
         )
     }
+
+    val trackers by viewModel.trackersFlow.collectAsState()
+    when (trackers.size) {
+        0 -> {
+            // No trackers
+        }
+        1 -> {
+            val service = trackers[0]
+            val filterTracker by viewModel.libraryPreferences.filterTracking(service.id.toInt()).collectAsState()
+            TriStateItem(
+                label = stringResource(MR.strings.action_filter_tracked),
+                state = filterTracker,
+                onClick = { viewModel.toggleTracker(service.id.toInt()) },
+            )
+        }
+        else -> {
+            HeadingItem(MR.strings.action_filter_tracked)
+            trackers.map { service ->
+                val filterTracker by viewModel.libraryPreferences.filterTracking(service.id.toInt()).collectAsState()
+                TriStateItem(
+                    label = service.name,
+                    state = filterTracker,
+                    onClick = { viewModel.toggleTracker(service.id.toInt()) },
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -131,11 +175,17 @@ private fun ColumnScope.SortPage(
     category: Category?,
     viewModel: LibrarySettingsViewModel,
 ) {
+    val trackers by viewModel.trackersFlow.collectAsState()
     val sortingMode = category.sort.type
     val sortDescending = !category.sort.isAscending
 
-    val options = remember {
-        listOf(
+    val options = remember(trackers.isEmpty()) {
+        val trackerMeanPair = if (trackers.isNotEmpty()) {
+            MR.strings.action_sort_tracker_score to LibrarySort.Type.TrackerMean
+        } else {
+            null
+        }
+        listOfNotNull(
             MR.strings.action_sort_alpha to LibrarySort.Type.Alphabetical,
             MR.strings.action_sort_total to LibrarySort.Type.TotalChapters,
             MR.strings.action_sort_last_read to LibrarySort.Type.LastRead,
@@ -144,6 +194,7 @@ private fun ColumnScope.SortPage(
             MR.strings.action_sort_latest_chapter to LibrarySort.Type.LatestChapter,
             MR.strings.action_sort_chapter_fetch_date to LibrarySort.Type.ChapterFetchDate,
             MR.strings.action_sort_date_added to LibrarySort.Type.DateAdded,
+            trackerMeanPair,
             MR.strings.action_sort_random to LibrarySort.Type.Random,
         )
     }
@@ -189,6 +240,23 @@ private val displayModes = listOf(
     MR.strings.action_display_cover_only_grid to LibraryDisplayMode.CoverOnlyGrid,
     MR.strings.action_display_list to LibraryDisplayMode.List,
 )
+
+private val groupingModes = listOf<Pair<Any, LibraryGroup>>(
+    R.drawable.ic_ungroup_24dp to LibraryGroup.BY_DEFAULT,
+    R.drawable.ic_browse_filled_24dp to LibraryGroup.BY_SOURCE,
+    R.drawable.ic_progress_clock_24dp to LibraryGroup.BY_STATUS,
+    R.drawable.globe to LibraryGroup.BY_LANGUAGE,
+    MaterialSymbols.Rounded.Favorite to LibraryGroup.BY_TRACKING_STATUS,
+)
+
+private fun LibraryGroup.getTitleRes() = when (this) {
+    LibraryGroup.BY_DEFAULT -> MR.strings.label_default
+    LibraryGroup.BY_SOURCE -> MR.strings.group_by_source
+    LibraryGroup.BY_STATUS -> MR.strings.group_by_status
+    LibraryGroup.BY_LANGUAGE -> MR.strings.group_by_language
+    LibraryGroup.BY_TRACKING_STATUS -> MR.strings.group_by_tracking_status
+    else -> MR.strings.unknown
+}
 
 @Composable
 private fun ColumnScope.DisplayPage(
@@ -261,4 +329,58 @@ private fun ColumnScope.DisplayPage(
         label = stringResource(MR.strings.action_display_show_number_of_items),
         pref = viewModel.libraryPreferences.categoryNumberOfItems,
     )
+}
+
+@Composable
+private fun ColumnScope.GroupPage(
+    viewModel: LibrarySettingsViewModel,
+) {
+    val groupingMode by viewModel.libraryPreferences.groupingMode.collectAsState()
+    groupingModes.map { (icon, mode) ->
+        GroupItem(
+            label = stringResource(mode.getTitleRes()),
+            selected = groupingMode == mode,
+            icon = icon,
+            onClick = { viewModel.setGroupingMode(mode) },
+        )
+    }
+}
+
+@Composable
+private fun GroupItem(
+    label: String,
+    selected: Boolean,
+    icon: Any?,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(24.dp),
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = null,
+        )
+        when (icon) {
+            is Int -> Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp),
+            )
+            is ImageVector -> Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
 }

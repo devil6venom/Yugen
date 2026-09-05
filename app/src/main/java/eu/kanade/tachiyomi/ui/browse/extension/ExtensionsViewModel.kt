@@ -53,6 +53,8 @@ class ExtensionsViewModel(
 
     private val currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
 
+    val filter = MutableStateFlow(ExtensionFilter.ALL)
+
     // Public so BrowseTab's search bar can observe it without subscribing to the whole state.
     val searchQuery: StateFlow<String?>
         field = MutableStateFlow(null)
@@ -74,25 +76,29 @@ class ExtensionsViewModel(
             .map { searchQueryPredicate(it ?: "") },
         currentDownloads,
         getExtensions.subscribe(),
-    ) { predicate, downloads, (_updates, _loaded, _available, _notLoaded) ->
+        filter,
+    ) { predicate, downloads, (_updates, _installed, _available, _untrusted), filter ->
+        val filterPredicate: (Extension) -> Boolean = {
+            when (filter) {
+                ExtensionFilter.ALL -> true
+                ExtensionFilter.SFW -> !it.isNsfw
+                ExtensionFilter.NSFW -> it.isNsfw
+            }
+        }
         buildMap {
-            val updates = _updates.filter(predicate).map(extensionMapper(downloads))
+            val updates = _updates.filter { predicate(it) && filterPredicate(it) }.map(extensionMapper(downloads))
             if (updates.isNotEmpty()) {
                 put(ExtensionUiModel.Header.Resource(MR.strings.ext_updates_pending), updates)
             }
 
-            val notLoaded = _notLoaded.filter(predicate).map(extensionMapper(downloads))
-            if (notLoaded.isNotEmpty()) {
-                put(ExtensionUiModel.Header.Resource(MR.strings.ext_not_loaded), notLoaded)
-            }
-
-            val loaded = _loaded.filter(predicate).map(extensionMapper(downloads))
-            if (loaded.isNotEmpty()) {
-                put(ExtensionUiModel.Header.Resource(MR.strings.ext_installed), loaded)
+            val installed = _installed.filter { predicate(it) && filterPredicate(it) }.map(extensionMapper(downloads))
+            val untrusted = _untrusted.filter { predicate(it) && filterPredicate(it) }.map(extensionMapper(downloads))
+            if (installed.isNotEmpty() || untrusted.isNotEmpty()) {
+                put(ExtensionUiModel.Header.Resource(MR.strings.ext_installed), installed + untrusted)
             }
 
             val languagesWithExtensions = _available
-                .filter(predicate)
+                .filter { predicate(it) && filterPredicate(it) }
                 .groupBy { it.lang }
                 .toSortedMap(LocaleHelper.comparator)
                 .map { (lang, exts) ->
@@ -113,7 +119,15 @@ class ExtensionsViewModel(
         isRefreshing,
         preferences.extensionUpdatesCount.changes(),
         basePreferences.extensionInstaller.changes(),
-    ) { items, searchQuery, isRefreshing, updates, installer ->
+        filter,
+    ) { args ->
+        val items = args[0] as? ItemGroups
+        val searchQuery = args[1] as? String
+        val isRefreshing = args[2] as Boolean
+        val updates = args[3] as Int
+        val installer = args[4] as? BasePreferences.ExtensionInstaller
+        val filter = args[5] as ExtensionFilter
+
         State(
             isLoading = items == null,
             isRefreshing = isRefreshing,
@@ -121,6 +135,7 @@ class ExtensionsViewModel(
             updates = updates,
             installer = installer,
             searchQuery = searchQuery,
+            filter = filter,
         )
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
@@ -142,7 +157,7 @@ class ExtensionsViewModel(
                 if (extension.name.contains(subquery, ignoreCase = true)) return@any true
 
                 when (extension) {
-                    is Extension.Loaded -> extension.sources.any { source ->
+                    is Extension.Installed -> extension.sources.any { source ->
                         source.name.contains(subquery, ignoreCase = true) ||
                             (source as? HttpSource)?.getHomeUrl()?.contains(subquery, ignoreCase = true) == true ||
                             source.id == subquery.toLongOrNull()
@@ -164,11 +179,15 @@ class ExtensionsViewModel(
         searchQuery.update { query }
     }
 
+    fun setFilter(filter: ExtensionFilter) {
+        this.filter.update { filter }
+    }
+
     fun updateAllExtensions() {
         viewModelScope.launchIO {
             state.value.items.values.flatten()
                 .map { it.extension }
-                .filterIsInstance<Extension.Loaded>()
+                .filterIsInstance<Extension.Installed>()
                 .filter { it.hasUpdate }
                 .forEach(::updateExtension)
         }
@@ -180,7 +199,7 @@ class ExtensionsViewModel(
         }
     }
 
-    fun updateExtension(extension: Extension.Loaded) {
+    fun updateExtension(extension: Extension.Installed) {
         viewModelScope.launchIO {
             extensionManager.updateExtension(extension).collectToInstallUpdate(extension)
         }
@@ -206,7 +225,7 @@ class ExtensionsViewModel(
             .onCompletion { removeDownloadState(extension) }
             .collect()
 
-    fun uninstallExtension(extension: Extension.Installed) {
+    fun uninstallExtension(extension: Extension) {
         extensionManager.uninstallExtension(extension)
     }
 
@@ -223,8 +242,19 @@ class ExtensionsViewModel(
         }
     }
 
-    fun trustExtension(extension: Extension.NotLoaded) {
-        extensionManager.trust(extension)
+    fun trustExtension(extension: Extension.Untrusted) {
+        viewModelScope.launch {
+            extensionManager.trust(extension)
+        }
+    }
+
+    fun trustAllExtensions() {
+        viewModelScope.launchIO {
+            state.value.items.values.flatten()
+                .map { it.extension }
+                .filterIsInstance<Extension.Untrusted>()
+                .forEach { extensionManager.trust(it) }
+        }
     }
 
     @Immutable
@@ -235,9 +265,14 @@ class ExtensionsViewModel(
         val updates: Int = 0,
         val installer: BasePreferences.ExtensionInstaller? = null,
         val searchQuery: String? = null,
+        val filter: ExtensionFilter = ExtensionFilter.ALL,
     ) {
         val isEmpty = items.isEmpty()
     }
+}
+
+enum class ExtensionFilter {
+    ALL, SFW, NSFW
 }
 
 typealias ItemGroups = Map<ExtensionUiModel.Header, List<ExtensionUiModel.Item>>

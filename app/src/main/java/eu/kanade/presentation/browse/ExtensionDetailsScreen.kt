@@ -32,18 +32,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import dev.icerock.moko.resources.StringResource
+import androidx.compose.ui.unit.sp
 import eu.kanade.domain.extension.interactor.ExtensionSourceItem
 import eu.kanade.presentation.browse.components.ExtensionIcon
-import eu.kanade.presentation.browse.components.label
+import eu.kanade.presentation.browse.components.LanguageBadge
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.WarningBanner
@@ -145,7 +145,7 @@ fun ExtensionDetailsScreen(
 @Composable
 private fun ExtensionDetails(
     contentPadding: PaddingValues,
-    extension: Extension.Loaded,
+    extension: Extension.Installed,
     sources: List<ExtensionSourceItem>,
     incognitoMode: Boolean,
     onClickSourcePreferences: (sourceId: Long) -> Unit,
@@ -154,8 +154,7 @@ private fun ExtensionDetails(
     onClickIncognito: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
-    var showContentWarning by remember { mutableStateOf(false) }
-    val contentWarning = extension.contentWarning.label
+    var showNsfwWarning by remember { mutableStateOf(false) }
 
     ScrollbarLazyColumn(
         contentPadding = contentPadding,
@@ -178,8 +177,8 @@ private fun ExtensionDetails(
                     }
                     Unit
                 }.takeIf { extension.isShared },
-                onClickContentWarning = {
-                    showContentWarning = true
+                onClickAgeRating = {
+                    showNsfwWarning = true
                 },
                 onExtIncognitoChange = onClickIncognito,
             )
@@ -197,12 +196,10 @@ private fun ExtensionDetails(
             )
         }
     }
-    if (showContentWarning && contentWarning != null) {
-        ContentWarningDialog(
-            label = contentWarning.title,
-            description = contentWarning.description,
+    if (showNsfwWarning) {
+        NsfwWarningDialog(
             onClickConfirm = {
-                showContentWarning = false
+                showNsfwWarning = false
             },
         )
     }
@@ -212,13 +209,12 @@ private fun ExtensionDetails(
 private fun DetailsHeader(
     extension: Extension,
     extIncognitoMode: Boolean,
-    onClickContentWarning: () -> Unit,
+    onClickAgeRating: () -> Unit,
     onClickUninstall: () -> Unit,
     onClickAppInfo: (() -> Unit)?,
     onExtIncognitoChange: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
-    val contentWarning = extension.contentWarning.label
 
     Column {
         Column(
@@ -235,11 +231,11 @@ private fun DetailsHeader(
                             """
                             Extension name: ${extension.name} (lang: ${extension.lang}; package: ${extension.pkgName})
                             Extension version: ${extension.versionName} (lib: ${extension.libVersion}; version code: ${extension.versionCode})
-                            Content warning: ${extension.contentWarning}
+                            NSFW: ${extension.isNsfw}
                             """.trimIndent(),
                         )
 
-                        if (extension is Extension.Loaded) {
+                        if (extension is Extension.Installed) {
                             append("\n\n")
                             appendLine(
                                 """
@@ -283,7 +279,7 @@ private fun DetailsHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    horizontal = MaterialTheme.padding.medium,
+                    horizontal = MaterialTheme.padding.extraLarge,
                     vertical = MaterialTheme.padding.small,
                 ),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -298,20 +294,23 @@ private fun DetailsHeader(
             InfoDivider()
 
             InfoText(
-                modifier = Modifier.weight(1f),
-                primaryText = LocaleHelper.getSourceDisplayName(extension.lang, context),
+                modifier = Modifier.weight(if (extension.isNsfw) 1.5f else 1f),
+                primaryTextContent = { LanguageBadge(lang = extension.lang) },
                 secondaryText = stringResource(MR.strings.ext_info_language),
             )
 
-            if (contentWarning != null) {
+            if (extension.isNsfw) {
                 InfoDivider()
 
                 InfoText(
                     modifier = Modifier.weight(1f),
-                    primaryText = stringResource(contentWarning.title),
-                    primaryTextColor = contentWarning.color,
-                    secondaryText = stringResource(MR.strings.ext_info_warning),
-                    onClick = onClickContentWarning,
+                    primaryText = stringResource(MR.strings.ext_nsfw_short),
+                    primaryTextStyle = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                    secondaryText = stringResource(MR.strings.ext_info_age_rating),
+                    onClick = onClickAgeRating,
                 )
             }
         }
@@ -366,10 +365,11 @@ private fun DetailsHeader(
 
 @Composable
 private fun InfoText(
-    primaryText: String,
     secondaryText: String,
     modifier: Modifier = Modifier,
-    primaryTextColor: Color = Color.Unspecified,
+    primaryText: String? = null,
+    primaryTextContent: @Composable (() -> Unit)? = null,
+    primaryTextStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     onClick: (() -> Unit)? = null,
 ) {
     val clickableModifier = if (onClick != null) {
@@ -383,19 +383,20 @@ private fun InfoText(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(
-            text = primaryText,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.titleSmall,
-            color = primaryTextColor,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (primaryTextContent != null) {
+            primaryTextContent()
+        } else if (primaryText != null) {
+            Text(
+                text = primaryText,
+                textAlign = TextAlign.Center,
+                style = primaryTextStyle,
+            )
+        }
 
         Text(
             text = secondaryText + if (onClick != null) " ⓘ" else "",
             textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
         )
     }
@@ -404,9 +405,7 @@ private fun InfoText(
 @Composable
 private fun InfoDivider() {
     VerticalDivider(
-        modifier = Modifier
-            .padding(horizontal = MaterialTheme.padding.small)
-            .height(24.dp),
+        modifier = Modifier.height(20.dp),
     )
 }
 
@@ -421,10 +420,21 @@ private fun SourceSwitchPreference(
 
     TextPreferenceWidget(
         modifier = modifier,
-        title = if (source.labelAsName) {
-            source.source.toString()
-        } else {
-            LocaleHelper.getSourceDisplayName(source.source.lang, context)
+        titleContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = if (source.labelAsName) {
+                        source.source.toString()
+                    } else {
+                        LocaleHelper.getSourceDisplayName(source.source.lang, context)
+                    },
+                    maxLines = 1,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontSize = 16.sp,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                LanguageBadge(lang = source.source.lang)
+            }
         },
         widget = {
             Row(
@@ -452,20 +462,12 @@ private fun SourceSwitchPreference(
 }
 
 @Composable
-private fun ContentWarningDialog(
-    label: StringResource,
-    description: StringResource,
+private fun NsfwWarningDialog(
     onClickConfirm: () -> Unit,
 ) {
     AlertDialog(
-        title = {
-            Text(
-                text = stringResource(label),
-                style = MaterialTheme.typography.titleMedium,
-            )
-        },
         text = {
-            Text(text = stringResource(description))
+            Text(text = stringResource(MR.strings.ext_nsfw_warning))
         },
         confirmButton = {
             TextButton(onClick = onClickConfirm) {

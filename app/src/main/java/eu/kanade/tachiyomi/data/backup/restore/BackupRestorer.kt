@@ -142,6 +142,8 @@ class BackupRestorer(
             if (options.extensionStores) {
                 restoreExtensionStores(backup.backupExtensionStores)
             }
+
+            // TODO: optionally trigger online library + tracker update
         }
     }
 

@@ -1,10 +1,19 @@
 package eu.kanade.presentation.more
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
@@ -40,9 +49,18 @@ fun MoreScreen(
     Scaffold { contentPadding ->
         ScrollbarLazyColumn(contentPadding = contentPadding) {
             item {
-                LogoHeader(
-                    iconPadding = PaddingValues(vertical = 108.dp),
-                )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Image(
+                        painter = painterResource(R.mipmap.feature_graphic),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .clip(RoundedCornerShape(16.dp)),
+                        contentScale = ContentScale.FillWidth,
+                    )
+                    HorizontalDivider()
+                }
             }
             item {
                 SwitchPreferenceWidget(

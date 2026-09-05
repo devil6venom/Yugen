@@ -15,7 +15,8 @@ import mihon.icons.materialsymbols.rounded.Preview
 @Composable
 fun SwitchPreferenceWidget(
     modifier: Modifier = Modifier,
-    title: String,
+    title: String? = null,
+    titleContent: @Composable (() -> Unit)? = null,
     subtitle: String? = null,
     icon: ImageVector? = null,
     checked: Boolean = false,
@@ -24,6 +25,7 @@ fun SwitchPreferenceWidget(
     TextPreferenceWidget(
         modifier = modifier,
         title = title,
+        titleContent = titleContent,
         subtitle = subtitle,
         icon = icon,
         widget = {

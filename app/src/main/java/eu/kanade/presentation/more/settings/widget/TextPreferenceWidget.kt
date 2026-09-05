@@ -20,6 +20,7 @@ import tachiyomi.presentation.core.util.secondaryItemAlpha
 fun TextPreferenceWidget(
     modifier: Modifier = Modifier,
     title: String? = null,
+    titleContent: @Composable (() -> Unit)? = null,
     subtitle: String? = null,
     icon: ImageVector? = null,
     iconTint: Color = MaterialTheme.colorScheme.primary,
@@ -29,6 +30,7 @@ fun TextPreferenceWidget(
     BasePreferenceWidget(
         modifier = modifier,
         title = title,
+        titleContent = titleContent,
         subcomponent = if (!subtitle.isNullOrBlank()) {
             {
                 Text(

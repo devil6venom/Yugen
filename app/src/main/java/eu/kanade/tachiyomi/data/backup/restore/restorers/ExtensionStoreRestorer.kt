@@ -20,6 +20,7 @@ class ExtensionStoreRestorer(
             contactWebsite = backupStore.contactWebsite,
             isLegacy = backupStore.isLegacy ?: true,
             extensionListUrl = backupStore.extensionListUrl,
+            enabled = backupStore.enabled ?: true,
         )
     }
 }

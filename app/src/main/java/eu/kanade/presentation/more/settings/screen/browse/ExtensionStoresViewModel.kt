@@ -22,9 +22,11 @@ import kotlinx.coroutines.launch
 import mihon.domain.extension.interactor.AddExtensionStore
 import mihon.domain.extension.interactor.GetExtensionStores
 import mihon.domain.extension.interactor.RemoveExtensionStore
+import mihon.domain.extension.interactor.ToggleExtensionStore
 import mihon.domain.extension.interactor.UpdateExtensionStores
 import mihon.domain.extension.model.ExtensionStore
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.i18n.MR
 import kotlin.time.Duration.Companion.seconds
 
 @Inject
@@ -33,6 +35,7 @@ import kotlin.time.Duration.Companion.seconds
 class ExtensionStoresViewModel(
     private val getExtensionStores: GetExtensionStores,
     private val addExtensionStore: AddExtensionStore,
+    private val toggleExtensionStore: ToggleExtensionStore,
     private val removeExtensionStore: RemoveExtensionStore,
     private val updateExtensionStores: UpdateExtensionStores,
     private val extensionManager: ExtensionManager,
@@ -44,7 +47,13 @@ class ExtensionStoresViewModel(
         getExtensionStores.subscribe(),
         dialog,
     ) { stores, dialog ->
-        ExtensionStoreScreenState.Success(stores = stores, dialog = dialog)
+        ExtensionStoreScreenState.Success(
+            stores = stores,
+            popularStores = popularStores.filter { popular ->
+                stores.none { it.indexUrl == popular.url }
+            },
+            dialog = dialog,
+        )
     }
         .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionStoreScreenState.Loading)
@@ -92,6 +101,7 @@ class ExtensionStoresViewModel(
     fun refreshRepos() {
         viewModelScope.launchIO {
             updateExtensionStores()
+            extensionManager.findAvailableExtensions()
         }
     }
 
@@ -101,6 +111,13 @@ class ExtensionStoresViewModel(
     fun deleteRepo(baseUrl: String) {
         viewModelScope.launchIO {
             removeExtensionStore(baseUrl)
+            extensionManager.findAvailableExtensions()
+        }
+    }
+
+    fun toggleRepo(baseUrl: String, enabled: Boolean) {
+        viewModelScope.launchIO {
+            toggleExtensionStore(baseUrl, enabled)
             extensionManager.findAvailableExtensions()
         }
     }
@@ -119,9 +136,36 @@ class ExtensionStoresViewModel(
     fun dismissDialog() {
         dialog.update { null }
     }
+
+    companion object {
+        val popularStores = listOf(
+            PopularStore(
+                nameRes = MR.strings.keiyoushi,
+                url = "https://raw.githubusercontent.com/keiyoushi/extensions/repo/index.min.json",
+                iconRes = eu.kanade.tachiyomi.R.mipmap.keiyoushi_repo,
+            ),
+            PopularStore(
+                nameRes = MR.strings.cursed_yuzuno,
+                url = "https://raw.githubusercontent.com/yuzono/cursed-manga-repo/repo/index.min.json",
+                iconRes = eu.kanade.tachiyomi.R.mipmap.cursedyuzuno_repo,
+            ),
+            PopularStore(
+                nameRes = MR.strings.nyora_manga,
+                url = "https://raw.githubusercontent.com/Nyora-Manga/nyora-mihon/main/index.min.json",
+                iconRes = eu.kanade.tachiyomi.R.mipmap.repo_nyora_manga,
+            ),
+        )
+    }
 }
 
+data class PopularStore(
+    val nameRes: dev.icerock.moko.resources.StringResource,
+    val url: String,
+    val iconRes: Int,
+)
+
 sealed class ExtensionStoreDialog {
+    data object Add : ExtensionStoreDialog()
     data class Create(val processing: Boolean = false, val errorMessage: String? = null) : ExtensionStoreDialog()
     data class Delete(val store: ExtensionStore) : ExtensionStoreDialog()
     data class Confirm(
@@ -140,10 +184,11 @@ sealed class ExtensionStoreScreenState {
     @Immutable
     data class Success(
         val stores: List<ExtensionStore>,
+        val popularStores: List<PopularStore> = emptyList(),
         val dialog: ExtensionStoreDialog? = null,
     ) : ExtensionStoreScreenState() {
 
         val isEmpty: Boolean
-            get() = stores.isEmpty()
+            get() = stores.isEmpty() && popularStores.isEmpty()
     }
 }

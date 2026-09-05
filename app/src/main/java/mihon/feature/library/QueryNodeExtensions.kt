@@ -95,7 +95,7 @@ private fun FieldQueryNode.matches(item: LibraryItem): Boolean {
             }
 
             if (value.isEmpty()) {
-                text.isNullOrEmpty()
+                text.isNullOrBlank()
             } else {
                 text?.contains(value, ignoreCase = true) ?: false
             }

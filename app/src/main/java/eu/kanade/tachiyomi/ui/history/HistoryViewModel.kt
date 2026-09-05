@@ -12,6 +12,7 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.core.util.insertSeparators
 import eu.kanade.domain.manga.interactor.UpdateManga
+import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.presentation.history.HistoryUiModel
 import eu.kanade.tachiyomi.util.lang.toLocalDate
 import kotlinx.coroutines.Dispatchers
@@ -50,6 +51,7 @@ import tachiyomi.domain.manga.interactor.GetDuplicateLibraryManga
 import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaWithChapterCount
+import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -60,6 +62,7 @@ import kotlin.time.Duration.Companion.seconds
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
 class HistoryViewModel(
+    private val addTracks: AddTracks,
     private val getCategories: GetCategories,
     private val getDuplicateLibraryManga: GetDuplicateLibraryManga,
     private val getHistory: GetHistory,
@@ -69,6 +72,7 @@ class HistoryViewModel(
     private val removeHistory: RemoveHistory,
     private val setMangaCategories: SetMangaCategories,
     private val updateManga: UpdateManga,
+    private val sourceManager: SourceManager,
 ) : ViewModel() {
 
     val snackbarHostState: SnackbarHostState = SnackbarHostState()
@@ -82,13 +86,18 @@ class HistoryViewModel(
 
     private val history = searchQuery
         .flatMapLatest { query ->
-            getHistory.subscribe(query ?: "")
+            combine(
+                getHistory.subscribe(query ?: ""),
+                sourceManager.sources,
+            ) { historyList, sources ->
+                val sourceMap = sources.associateBy { it.id }
+                historyList.toHistoryUiModels(sourceMap)
+            }
                 .distinctUntilChanged()
                 .catch { error ->
                     logcat(LogPriority.ERROR, error)
                     _events.send(Event.InternalError)
                 }
-                .map { it.toHistoryUiModels() }
                 .flowOn(Dispatchers.IO)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), emptyList())
@@ -102,8 +111,13 @@ class HistoryViewModel(
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
 
-    private fun List<HistoryWithRelations>.toHistoryUiModels(): List<HistoryUiModel> {
-        return map { HistoryUiModel.Item(it) }
+    private fun List<HistoryWithRelations>.toHistoryUiModels(
+        sourceMap: Map<Long, eu.kanade.tachiyomi.source.Source>,
+    ): List<HistoryUiModel> {
+        return map {
+            val lang = sourceMap[it.coverData.sourceId]?.lang
+            HistoryUiModel.Item(it, lang)
+        }
             .insertSeparators { before, after ->
                 val beforeDate = before?.item?.readAt?.time?.toLocalDate()
                 val afterDate = after?.item?.readAt?.time?.toLocalDate()
@@ -255,6 +269,9 @@ class HistoryViewModel(
                 // Choose a category
                 else -> showChangeCategoryDialog(manga)
             }
+
+            // Sync with tracking services if applicable
+            addTracks.bindEnhancedTrackers(manga, sourceManager.getOrStub(manga.source))
         }
     }
 

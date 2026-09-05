@@ -13,6 +13,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoreScreenState
 import mihon.domain.extension.model.ExtensionStore
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Add
 import mihon.icons.materialsymbols.rounded.Refresh
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -25,11 +26,12 @@ import tachiyomi.presentation.core.util.plus
 @Composable
 fun ExtensionStoresScreen(
     state: ExtensionStoreScreenState.Success,
-    onClickCreate: () -> Unit,
+    onClickAdd: () -> Unit,
     onCopy: (ExtensionStore) -> Unit,
     onOpenWebsite: (ExtensionStore) -> Unit,
     onClickDelete: (ExtensionStore) -> Unit,
     onClickRefresh: () -> Unit,
+    onToggle: (ExtensionStore, Boolean) -> Unit,
     navigateUp: () -> Unit,
 ) {
     val lazyListState = rememberLazyListState()
@@ -40,6 +42,12 @@ fun ExtensionStoresScreen(
                 title = stringResource(MR.strings.extensionStores),
                 scrollBehavior = scrollBehavior,
                 actions = {
+                    IconButton(onClick = onClickAdd) {
+                        Icon(
+                            imageVector = MaterialSymbols.Rounded.Add,
+                            contentDescription = stringResource(resource = MR.strings.action_add),
+                        )
+                    }
                     IconButton(onClick = onClickRefresh) {
                         Icon(
                             imageVector = MaterialSymbols.Rounded.Refresh,
@@ -52,7 +60,7 @@ fun ExtensionStoresScreen(
         floatingActionButton = {
             CategoryFloatingActionButton(
                 lazyListState = lazyListState,
-                onCreate = onClickCreate,
+                onCreate = onClickAdd,
             )
         },
     ) { paddingValues ->
@@ -72,6 +80,7 @@ fun ExtensionStoresScreen(
             onCopy = onCopy,
             onOpenWebsite = onOpenWebsite,
             onClickDelete = onClickDelete,
+            onToggle = onToggle,
         )
     }
 }
