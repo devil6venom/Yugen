@@ -26,8 +26,8 @@ android {
     defaultConfig {
         applicationId = "app.yugen"
 
-        versionCode = 11
-        versionName = "1.0.4"
+        versionCode = 12
+        versionName = "1.0.5"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")

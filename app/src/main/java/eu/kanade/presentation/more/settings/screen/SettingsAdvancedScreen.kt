@@ -27,6 +27,7 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
 import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
 import eu.kanade.tachiyomi.data.library.MetadataUpdateJob
+import eu.kanade.presentation.more.settings.screen.network.DnsTestScreen
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.PREF_DOH_360
 import eu.kanade.tachiyomi.network.PREF_DOH_ADGUARD
@@ -119,7 +120,7 @@ object SettingsAdvancedScreen : SearchableSettings {
             ),
             getBackgroundActivityGroup(),
             getDataGroup(),
-            getNetworkGroup(networkPreferences = networkPreferences),
+            getNetworkGroup(networkPreferences = networkPreferences, navigator = navigator),
             getLibraryGroup(libraryPreferences = libraryPreferences),
             getReaderGroup(basePreferences = basePreferences),
             getExtensionsGroup(basePreferences = basePreferences),
@@ -188,6 +189,7 @@ object SettingsAdvancedScreen : SearchableSettings {
     @Composable
     private fun getNetworkGroup(
         networkPreferences: NetworkPreferences,
+        navigator: cafe.adriel.voyager.navigator.Navigator,
     ): Preference.PreferenceGroup {
         val context = LocalContext.current
         val networkHelper = remember { context.appGraph.networkHelper }
@@ -225,6 +227,11 @@ object SettingsAdvancedScreen : SearchableSettings {
                         }
                     },
                 ),
+                Preference.PreferenceItem.TextPreference(
+                    title = "DNS Checker",
+                    subtitle = "Test DNS-over-HTTPS providers",
+                    onClick = { navigator.push(DnsTestScreen()) },
+                ),
                 Preference.PreferenceItem.ListPreference(
                     preference = networkPreferences.dohProvider,
                     entries = mapOf(
@@ -244,7 +251,6 @@ object SettingsAdvancedScreen : SearchableSettings {
                     ),
                     title = stringResource(MR.strings.pref_dns_over_https),
                     onValueChanged = {
-                        context.toast(MR.strings.requires_app_restart)
                         true
                     },
                 ),
