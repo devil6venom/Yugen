@@ -27,7 +27,6 @@ jobs:
     outputs:
       tag: ${{ steps.set_tag.outputs.tag }}
       version: ${{ steps.set_tag.outputs.version }}
-      changelog: ${{ steps.gen_changelog.outputs.changelog }}
 
     steps:
       - name: Checkout
@@ -44,33 +43,47 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             INPUT_TAG="${{ github.event.inputs.tag_name }}"
             if [ -n "$INPUT_TAG" ]; then
-              echo "tag=$INPUT_TAG" >> $GITHUB_OUTPUT
+              TAG="$INPUT_TAG"
             else
-              # Use stable suffix for manual runs
-              echo "tag=v$VERSION-stable-${{ github.run_number }}" >> $GITHUB_OUTPUT
+              TAG="v$VERSION-stable-${{ github.run_number }}"
             fi
           else
-            echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+            TAG="${GITHUB_REF/refs\/tags\//}"
           fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-      - name: Generate Changelog
-        id: gen_changelog
+      - name: Generate Release Body
         run: |
-          # Fetch all tags to ensure git describe works
-          git fetch --tags --force
+          TAG="${{ steps.set_tag.outputs.tag }}"
+          VER="${{ steps.set_tag.outputs.version }}"
 
-          # Find the previous tag before current HEAD
+          git fetch --tags --force
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)
 
-          echo "### Changes since $PREV_TAG" > changelog.md
-          git log $PREV_TAG..HEAD --oneline --pretty=format:"* %h %s" >> changelog.md
-          echo "" >> changelog.md
+          echo "## Release $TAG" > release_notes.md
+          echo "" >> release_notes.md
+          echo "Built from version $VER." >> release_notes.md
+          echo "" >> release_notes.md
+          echo "### Changes since $PREV_TAG" >> release_notes.md
 
-          # Use a random delimiter to avoid "Matching delimiter not found" error
-          EOF=$(dd if=/dev/urandom bs=15 count=1 2>/dev/null | base64)
-          echo "changelog<<$EOF" >> $GITHUB_OUTPUT
-          cat changelog.md >> $GITHUB_OUTPUT
-          echo "$EOF" >> $GITHUB_OUTPUT
+          # Limit to 100 commits to avoid "Argument list too long" errors
+          git log $PREV_TAG..HEAD --oneline --pretty=format:"* %h %s" | head -n 100 >> release_notes.md
+
+          if [ $(git rev-list --count $PREV_TAG..HEAD) -gt 100 ]; then
+            echo "" >> release_notes.md
+            echo "*... and more. [See full diff](https://github.com/${{ github.repository }}/compare/$PREV_TAG...$TAG)*" >> release_notes.md
+          fi
+
+          echo "" >> release_notes.md
+          echo "### Downloads" >> release_notes.md
+          echo "* \`yugen-arm64-v${VER}-stable.apk\` (Recommended)" >> release_notes.md
+          echo "* \`yugen-armv7-v${VER}-stable.apk\`" >> release_notes.md
+
+      - name: Upload Release Notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release_notes.md
 
       - name: Create and push tag
         if: github.event_name == 'workflow_dispatch'
@@ -138,26 +151,22 @@ jobs:
       contents: write
 
     steps:
-      - name: Download artifacts
+      - name: Download APKs
         uses: actions/download-artifact@v4
         with:
           name: yugen-apks
+
+      - name: Download Release Notes
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare_release.outputs.tag }}
           name: Yugen ${{ needs.prepare_release.outputs.tag }}
-          body: |
-            ## Release ${{ needs.prepare_release.outputs.tag }}
-
-            Built from version ${{ needs.prepare_release.outputs.version }}.
-
-            ${{ needs.prepare_release.outputs.changelog }}
-
-            ### Downloads
-            * `yugen-arm64-v${{ needs.prepare_release.outputs.version }}-stable.apk` (Recommended)
-            * `yugen-armv7-v${{ needs.prepare_release.outputs.version }}-stable.apk`
+          body_path: release_notes.md
           files: |
             yugen-arm64-v${{ needs.prepare_release.outputs.version }}-stable.apk
             yugen-armv7-v${{ needs.prepare_release.outputs.version }}-stable.apk
