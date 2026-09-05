@@ -64,11 +64,13 @@ jobs:
 
           echo "### Changes since $PREV_TAG" > changelog.md
           git log $PREV_TAG..HEAD --oneline --pretty=format:"* %h %s" >> changelog.md
+          echo "" >> changelog.md
 
-          # Handling newlines for GitHub Output
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          # Use a random delimiter to avoid "Matching delimiter not found" error
+          EOF=$(dd if=/dev/urandom bs=15 count=1 2>/dev/null | base64)
+          echo "changelog<<$EOF" >> $GITHUB_OUTPUT
           cat changelog.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
 
       - name: Create and push tag
         if: github.event_name == 'workflow_dispatch'
