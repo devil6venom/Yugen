@@ -47,4 +47,6 @@ class BasePreferences(
         "pref_always_decode_long_strip_with_ssiv",
         false,
     )
+
+    val lastAppUpdateCheck: Preference<Long> = preferenceStore.getLong(Preference.appStateKey("last_app_check"), 0L)
 }
