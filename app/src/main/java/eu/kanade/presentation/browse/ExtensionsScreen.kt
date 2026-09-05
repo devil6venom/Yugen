@@ -3,6 +3,7 @@ package eu.kanade.presentation.browse
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,9 +14,11 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -38,15 +41,16 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.browse.components.BaseBrowseItem
 import eu.kanade.presentation.browse.components.ExtensionIcon
+import eu.kanade.presentation.browse.components.LanguageBadge
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.manga.components.DotSeparatorNoSpaceText
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.util.rememberRequestPackageInstallsPermissionState
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.ui.browse.extension.ExtensionFilter
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsViewModel
-import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
@@ -80,9 +84,11 @@ fun ExtensionScreen(
     onUninstallExtension: (Extension) -> Unit,
     onUpdateExtension: (Extension.Installed) -> Unit,
     onTrustExtension: (Extension.Untrusted) -> Unit,
+    onTrustAllExtensions: () -> Unit,
     onOpenExtension: (Extension.Installed) -> Unit,
     onClickUpdateAll: () -> Unit,
     onRefresh: () -> Unit,
+    onFilterSelected: (ExtensionFilter) -> Unit,
 ) {
     val navigator = LocalNavigator.currentOrThrow
 
@@ -122,8 +128,10 @@ fun ExtensionScreen(
                     onUninstallExtension = onUninstallExtension,
                     onUpdateExtension = onUpdateExtension,
                     onTrustExtension = onTrustExtension,
+                    onTrustAllExtensions = onTrustAllExtensions,
                     onOpenExtension = onOpenExtension,
                     onClickUpdateAll = onClickUpdateAll,
+                    onFilterSelected = onFilterSelected,
                 )
             }
         }
@@ -141,8 +149,10 @@ private fun ExtensionContent(
     onUninstallExtension: (Extension) -> Unit,
     onUpdateExtension: (Extension.Installed) -> Unit,
     onTrustExtension: (Extension.Untrusted) -> Unit,
+    onTrustAllExtensions: () -> Unit,
     onOpenExtension: (Extension.Installed) -> Unit,
     onClickUpdateAll: () -> Unit,
+    onFilterSelected: (ExtensionFilter) -> Unit,
 ) {
     val context = LocalContext.current
     var trustState by remember { mutableStateOf<Extension.Untrusted?>(null) }
@@ -151,6 +161,13 @@ private fun ExtensionContent(
     FastScrollLazyColumn(
         contentPadding = contentPadding + topSmallPaddingValues,
     ) {
+        item(key = "extension-filters") {
+            ExtensionFilters(
+                currentFilter = state.filter,
+                onFilterSelected = onFilterSelected,
+            )
+        }
+
         if (!installGranted && state.installer?.requiresSystemPermission == true) {
             item(key = "extension-permissions-warning") {
                 WarningBanner(
@@ -170,19 +187,37 @@ private fun ExtensionContent(
                 when (header) {
                     is ExtensionUiModel.Header.Resource -> {
                         val action: @Composable RowScope.() -> Unit =
-                            if (header.textRes == MR.strings.ext_updates_pending) {
-                                {
-                                    Button(onClick = { onClickUpdateAll() }) {
-                                        Text(
-                                            text = stringResource(MR.strings.ext_update_all),
-                                            style = LocalTextStyle.current.copy(
-                                                color = MaterialTheme.colorScheme.onPrimary,
-                                            ),
-                                        )
+                            when (header.textRes) {
+                                MR.strings.ext_updates_pending -> {
+                                    {
+                                        Button(onClick = { onClickUpdateAll() }) {
+                                            Text(
+                                                text = stringResource(MR.strings.ext_update_all),
+                                                style = LocalTextStyle.current.copy(
+                                                    color = MaterialTheme.colorScheme.onPrimary,
+                                                ),
+                                            )
+                                        }
                                     }
                                 }
-                            } else {
-                                {}
+                                MR.strings.ext_installed -> {
+                                    val hasUntrusted = items.any { it.extension is Extension.Untrusted }
+                                    if (hasUntrusted) {
+                                        {
+                                            Button(onClick = { onTrustAllExtensions() }) {
+                                                Text(
+                                                    text = stringResource(MR.strings.ext_trust_all),
+                                                    style = LocalTextStyle.current.copy(
+                                                        color = MaterialTheme.colorScheme.onPrimary,
+                                                    ),
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        {}
+                                    }
+                                }
+                                else -> {{}}
                             }
                         ExtensionHeader(
                             textRes = header.textRes,
@@ -268,6 +303,37 @@ private fun ExtensionContent(
 }
 
 @Composable
+private fun ExtensionFilters(
+    currentFilter: ExtensionFilter,
+    onFilterSelected: (ExtensionFilter) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = MaterialTheme.padding.medium)
+            .padding(bottom = MaterialTheme.padding.small),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        FilterChip(
+            selected = currentFilter == ExtensionFilter.ALL,
+            onClick = { onFilterSelected(ExtensionFilter.ALL) },
+            label = { Text(text = stringResource(MR.strings.all)) },
+        )
+        FilterChip(
+            selected = currentFilter == ExtensionFilter.SFW,
+            onClick = { onFilterSelected(ExtensionFilter.SFW) },
+            label = { Text(text = "SFW") },
+        )
+        FilterChip(
+            selected = currentFilter == ExtensionFilter.NSFW,
+            onClick = { onFilterSelected(ExtensionFilter.NSFW) },
+            label = { Text(text = "🔞") },
+        )
+    }
+}
+
+@Composable
 private fun ExtensionItem(
     item: ExtensionUiModel.Item,
     onClickItem: (Extension) -> Unit,
@@ -345,18 +411,15 @@ private fun ExtensionItemContent(
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodyMedium,
         )
-        // Won't look good but it's not like we can ellipsize overflowing content
         FlowRow(
             modifier = Modifier.secondaryItemAlpha(),
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
         ) {
             ProvideTextStyle(value = MaterialTheme.typography.bodySmall) {
                 var hasAlreadyShownAnElement by remember { mutableStateOf(false) }
-                if (extension is Extension.Installed && extension.lang.isNotEmpty()) {
+                if (!extension.lang.isNullOrEmpty()) {
                     hasAlreadyShownAnElement = true
-                    Text(
-                        text = LocaleHelper.getSourceDisplayName(extension.lang, LocalContext.current),
-                    )
+                    LanguageBadge(lang = extension.lang)
                 }
 
                 if (extension.versionName.isNotEmpty()) {

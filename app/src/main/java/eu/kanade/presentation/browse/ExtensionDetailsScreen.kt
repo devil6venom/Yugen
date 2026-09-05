@@ -40,8 +40,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import eu.kanade.domain.extension.interactor.ExtensionSourceItem
 import eu.kanade.presentation.browse.components.ExtensionIcon
+import eu.kanade.presentation.browse.components.LanguageBadge
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.WarningBanner
@@ -293,7 +295,7 @@ private fun DetailsHeader(
 
             InfoText(
                 modifier = Modifier.weight(if (extension.isNsfw) 1.5f else 1f),
-                primaryText = LocaleHelper.getSourceDisplayName(extension.lang, context),
+                primaryTextContent = { LanguageBadge(lang = extension.lang) },
                 secondaryText = stringResource(MR.strings.ext_info_language),
             )
 
@@ -363,9 +365,10 @@ private fun DetailsHeader(
 
 @Composable
 private fun InfoText(
-    primaryText: String,
     secondaryText: String,
     modifier: Modifier = Modifier,
+    primaryText: String? = null,
+    primaryTextContent: @Composable (() -> Unit)? = null,
     primaryTextStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     onClick: (() -> Unit)? = null,
 ) {
@@ -380,11 +383,15 @@ private fun InfoText(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(
-            text = primaryText,
-            textAlign = TextAlign.Center,
-            style = primaryTextStyle,
-        )
+        if (primaryTextContent != null) {
+            primaryTextContent()
+        } else if (primaryText != null) {
+            Text(
+                text = primaryText,
+                textAlign = TextAlign.Center,
+                style = primaryTextStyle,
+            )
+        }
 
         Text(
             text = secondaryText + if (onClick != null) " ⓘ" else "",
@@ -413,10 +420,21 @@ private fun SourceSwitchPreference(
 
     TextPreferenceWidget(
         modifier = modifier,
-        title = if (source.labelAsName) {
-            source.source.toString()
-        } else {
-            LocaleHelper.getSourceDisplayName(source.source.lang, context)
+        titleContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = if (source.labelAsName) {
+                        source.source.toString()
+                    } else {
+                        LocaleHelper.getSourceDisplayName(source.source.lang, context)
+                    },
+                    maxLines = 1,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontSize = 16.sp,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                LanguageBadge(lang = source.source.lang)
+            }
         },
         widget = {
             Row(

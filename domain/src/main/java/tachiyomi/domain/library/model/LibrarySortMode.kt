@@ -35,9 +35,7 @@ data class LibrarySort(
 
         companion object {
             fun valueOf(flag: Long): Type {
-                return types.find { type -> type.flag == flag and type.mask }
-                    ?.takeUnless { it == TrackerMean }
-                    ?: default.type
+                return types.find { type -> type.flag == flag and type.mask } ?: default.type
             }
         }
     }
@@ -107,7 +105,7 @@ data class LibrarySort(
                     "LATEST_CHAPTER" -> Type.LatestChapter
                     "CHAPTER_FETCH_DATE" -> Type.ChapterFetchDate
                     "DATE_ADDED" -> Type.DateAdded
-                    "TRACKER_MEAN" -> Type.Alphabetical
+                    "TRACKER_MEAN" -> Type.TrackerMean
                     "RANDOM" -> Type.Random
                     else -> Type.Alphabetical
                 }

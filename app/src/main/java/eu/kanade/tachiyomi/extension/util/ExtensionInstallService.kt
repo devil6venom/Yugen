@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.extension.util
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.IBinder
 import eu.kanade.domain.base.BasePreferences
@@ -25,7 +26,8 @@ class ExtensionInstallService : Service() {
 
     override fun onCreate() {
         val notification = notificationBuilder(Notifications.CHANNEL_EXTENSIONS_UPDATE) {
-            setSmallIcon(R.drawable.ic_mihon)
+            setSmallIcon(R.drawable.ic_notification)
+            setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
             setAutoCancel(false)
             setOngoing(true)
             setShowWhen(false)

@@ -8,6 +8,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import eu.kanade.presentation.more.settings.screen.browse.components.ExtensionStoreAddDialog
 import eu.kanade.presentation.more.settings.screen.browse.components.ExtensionStoreConfirmDialog
 import eu.kanade.presentation.more.settings.screen.browse.components.ExtensionStoreCreateDialog
 import eu.kanade.presentation.more.settings.screen.browse.components.ExtensionStoreDeleteDialog
@@ -42,16 +43,25 @@ class ExtensionStoresScreen(
 
         ExtensionStoresScreen(
             state = successState,
-            onClickCreate = { viewModel.showDialog(ExtensionStoreDialog.Create()) },
+            onClickAdd = { viewModel.showDialog(ExtensionStoreDialog.Add) },
             onCopy = { context.copyToClipboard(it.indexUrl, it.indexUrl) },
             onOpenWebsite = { it.contact.website.let(context::openInBrowser) },
             onClickDelete = { viewModel.showDialog(ExtensionStoreDialog.Delete(it)) },
             onClickRefresh = { viewModel.refreshRepos() },
+            onToggle = { store, enabled -> viewModel.toggleRepo(store.indexUrl, enabled) },
             navigateUp = navigator::pop,
         )
 
         when (val dialog = successState.dialog) {
             null -> {}
+            is ExtensionStoreDialog.Add -> {
+                ExtensionStoreAddDialog(
+                    onDismissRequest = viewModel::dismissDialog,
+                    popularStores = successState.popularStores,
+                    onClickPopular = { viewModel.createRepo(it.url) },
+                    onClickCustom = { viewModel.showDialog(ExtensionStoreDialog.Create()) },
+                )
+            }
             is ExtensionStoreDialog.Create -> {
                 ExtensionStoreCreateDialog(
                     onDismissRequest = viewModel::dismissDialog,

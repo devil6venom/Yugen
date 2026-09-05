@@ -3,6 +3,7 @@ package eu.kanade.presentation.browse
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
@@ -14,10 +15,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.browse.components.BaseSourceItem
+import eu.kanade.presentation.browse.components.LanguageBadge
 import eu.kanade.tachiyomi.ui.browse.source.SourcesViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceViewModel.Listing
 import eu.kanade.tachiyomi.util.system.LocaleHelper
@@ -98,12 +101,18 @@ private fun SourceHeader(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    Text(
-        text = LocaleHelper.getSourceDisplayName(language, context),
+    Row(
         modifier = modifier
             .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        style = MaterialTheme.typography.header,
-    )
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = LocaleHelper.getSourceDisplayName(language, context),
+            style = MaterialTheme.typography.header,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+        LanguageBadge(lang = language)
+    }
 }
 
 @Composable

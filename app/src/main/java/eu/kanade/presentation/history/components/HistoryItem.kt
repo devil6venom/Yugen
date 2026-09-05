@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.browse.components.LanguageBadge
 import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.util.formatChapterNumber
@@ -42,6 +43,7 @@ fun HistoryItem(
     onClickDelete: () -> Unit,
     onClickFavorite: () -> Unit,
     modifier: Modifier = Modifier,
+    lang: String? = null,
 ) {
     Row(
         modifier = modifier
@@ -60,14 +62,17 @@ fun HistoryItem(
                 .weight(1f)
                 .padding(start = MaterialTheme.padding.medium, end = MaterialTheme.padding.small),
         ) {
-            val textStyle = MaterialTheme.typography.bodyMedium
-            Text(
-                text = history.title,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                style = textStyle,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = history.title,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                LanguageBadge(lang = lang)
+            }
             val readAt = remember { history.readAt?.toTimestampString() ?: "" }
             Text(
                 text = if (history.chapterNumber > -1) {
@@ -80,7 +85,7 @@ fun HistoryItem(
                     readAt
                 },
                 modifier = Modifier.padding(top = 4.dp),
-                style = textStyle,
+                style = MaterialTheme.typography.bodyMedium,
             )
         }
 

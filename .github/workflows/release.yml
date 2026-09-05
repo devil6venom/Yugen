@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   get_tag:
-    if: github.repository == 'ddCeka/mihon'
+    if: github.repository == 'devil6venom/yugen'
     name: Extract tag name
     runs-on: 'ubuntu-24.04'
     outputs:
@@ -25,7 +25,7 @@ jobs:
         run: echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
 
   build:
-    if: github.repository == 'ddCeka/mihon'
+    if: github.repository == 'devil6venom/yugen'
     name: Build
     runs-on: 'ubuntu-24.04'
     needs: get_tag
@@ -75,7 +75,7 @@ jobs:
             mihon-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
 
   release:
-    if: github.repository == 'ddCeka/mihon'
+    if: github.repository == 'devil6venom/yugen'
     name: Create GitHub Release
     runs-on: ubuntu-24.04
     needs: [get_tag, build]

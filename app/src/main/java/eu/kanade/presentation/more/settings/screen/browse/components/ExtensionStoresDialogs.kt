@@ -2,11 +2,17 @@ package eu.kanade.presentation.more.settings.screen.browse.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -15,13 +21,68 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.more.settings.screen.browse.PopularStore
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Add
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+
+@Composable
+fun ExtensionStoreAddDialog(
+    onDismissRequest: () -> Unit,
+    popularStores: List<PopularStore>,
+    onClickPopular: (PopularStore) -> Unit,
+    onClickCustom: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = {
+            Text(text = stringResource(MR.strings.popular_repos))
+        },
+        text = {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(popularStores) { store ->
+                    PopularStoreListItem(
+                        store = store,
+                        onClickAdd = {
+                            onClickPopular(store)
+                            onDismissRequest()
+                        },
+                    )
+                }
+                item {
+                    TextButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = onClickCustom,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = MaterialSymbols.Rounded.Add,
+                                contentDescription = null,
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = stringResource(MR.strings.extensionStoresScreen_addStore_title))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(text = stringResource(MR.strings.action_cancel))
+            }
+        },
+    )
+}
 
 @Composable
 fun ExtensionStoreCreateDialog(

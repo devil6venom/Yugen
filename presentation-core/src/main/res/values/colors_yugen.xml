@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="yugen_primary">#C69800</color>
+    <color name="yugen_onPrimary">#FFFFFF</color>
+    <color name="yugen_primaryContainer">#FFF0C2</color>
+    <color name="yugen_onPrimaryContainer">#221B00</color>
+    <color name="yugen_inversePrimary">#F1C40F</color>
+
+    <color name="yugen_secondary">#40514E</color>
+    <color name="yugen_onSecondary">#FFFFFF</color>
+    <color name="yugen_secondaryContainer">#C2D1CF</color>
+    <color name="yugen_onSecondaryContainer">#00201C</color>
+
+    <color name="yugen_tertiary">#5D5F5E</color>
+    <color name="yugen_onTertiary">#FFFFFF</color>
+    <color name="yugen_tertiaryContainer">#E2E2E2</color>
+    <color name="yugen_onTertiaryContainer">#1A1C1C</color>
+
+    <color name="yugen_background">#FFFBEC</color>
+    <color name="yugen_onBackground">#1C1C16</color>
+    <color name="yugen_surface">#FFFBEC</color>
+    <color name="yugen_onSurface">#1C1C16</color>
+    <color name="yugen_surfaceVariant">#EDE7D1</color>
+    <color name="yugen_onSurfaceVariant">#4D4734</color>
+    <color name="yugen_surfaceTint">#C69800</color>
+    <color name="yugen_inverseSurface">#31302C</color>
+    <color name="yugen_inverseOnSurface">#F5F0E7</color>
+    <color name="yugen_outline">#7E7762</color>
+
+    <color name="yugen_surfaceContainerLowest">#FFFFFF</color>
+    <color name="yugen_surfaceContainerLow">#FAF4E2</color>
+    <color name="yugen_surfaceContainer">#F4EEDC</color>
+    <color name="yugen_surfaceContainerHigh">#EEE9D6</color>
+    <color name="yugen_surfaceContainerHighest">#E9E3D1</color>
+</resources>

@@ -28,6 +28,7 @@ import eu.kanade.presentation.theme.colorscheme.TidalWaveColorScheme
 import eu.kanade.presentation.theme.colorscheme.TokyoNightColorScheme
 import eu.kanade.presentation.theme.colorscheme.YinYangColorScheme
 import eu.kanade.presentation.theme.colorscheme.YotsubaColorScheme
+import eu.kanade.presentation.theme.colorscheme.YugenColorScheme
 import mihon.app.di.appGraph
 
 @Composable
@@ -134,4 +135,5 @@ private val colorSchemes: Map<AppTheme, BaseColorScheme> = mapOf(
     AppTheme.TOKYONIGHT to TokyoNightColorScheme,
     AppTheme.YINYANG to YinYangColorScheme,
     AppTheme.YOTSUBA to YotsubaColorScheme,
+    AppTheme.YUGEN to YugenColorScheme,
 )

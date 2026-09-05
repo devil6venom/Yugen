@@ -30,9 +30,10 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun GlobalSearchResultItem(
     title: String,
-    subtitle: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    subtitleContent: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     Column(modifier = modifier) {
@@ -52,7 +53,11 @@ fun GlobalSearchResultItem(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                 )
-                Text(text = subtitle)
+                if (subtitleContent != null) {
+                    subtitleContent()
+                } else if (subtitle != null) {
+                    Text(text = subtitle)
+                }
             }
             IconButton(onClick = onClick) {
                 Icon(imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward, contentDescription = null)

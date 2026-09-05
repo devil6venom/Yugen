@@ -644,6 +644,39 @@
         <item name="colorSurfaceContainerLowest">@color/yotsuba_surfaceContainerLowest</item>
     </style>
 
+    <!--== Yugen Theme ==-->
+    <style name="Theme.Tachiyomi.Yugen">
+        <!-- Theme Colors -->
+        <item name="colorPrimary">@color/yugen_primary</item>
+        <item name="colorOnPrimary">@color/yugen_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/yugen_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/yugen_onPrimaryContainer</item>
+        <item name="colorPrimaryInverse">@color/yugen_inversePrimary</item>
+        <item name="colorSecondary">@color/yugen_secondary</item>
+        <item name="colorOnSecondary">@color/yugen_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/yugen_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/yugen_onSecondaryContainer</item>
+        <item name="colorTertiary">@color/yugen_tertiary</item>
+        <item name="colorOnTertiary">@color/yugen_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/yugen_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/yugen_onTertiaryContainer</item>
+        <item name="android:colorBackground">@color/yugen_background</item>
+        <item name="colorOnBackground">@color/yugen_onBackground</item>
+        <item name="colorSurface">@color/yugen_surface</item>
+        <item name="colorOnSurface">@color/yugen_onSurface</item>
+        <item name="colorSurfaceVariant">@color/yugen_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/yugen_onSurfaceVariant</item>
+        <item name="elevationOverlayColor">@color/yugen_surfaceTint</item>
+        <item name="colorSurfaceInverse">@color/yugen_inverseSurface</item>
+        <item name="colorOnSurfaceInverse">@color/yugen_inverseOnSurface</item>
+        <item name="colorOutline">@color/yugen_outline</item>
+        <item name="colorSurfaceContainer">@color/yugen_surfaceContainer</item>
+        <item name="colorSurfaceContainerHigh">@color/yugen_surfaceContainerHigh</item>
+        <item name="colorSurfaceContainerHighest">@color/yugen_surfaceContainerHighest</item>
+        <item name="colorSurfaceContainerLow">@color/yugen_surfaceContainerLow</item>
+        <item name="colorSurfaceContainerLowest">@color/yugen_surfaceContainerLowest</item>
+    </style>
+
     <!--== AMOLED Mode Overlay ==-->
     <style name="ThemeOverlay.Tachiyomi.Amoled" parent="" />
 

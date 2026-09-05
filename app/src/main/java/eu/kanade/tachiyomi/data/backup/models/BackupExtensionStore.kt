@@ -13,6 +13,7 @@ class BackupExtensionStore(
     @ProtoNumber(4) var contactWebsite: String,
     @ProtoNumber(7) var isLegacy: Boolean?,
     @ProtoNumber(8) var extensionListUrl: String?,
+    @ProtoNumber(9) var enabled: Boolean? = null,
 )
 
 val backupExtensionStoreMapper = { store: ExtensionStore ->
@@ -24,5 +25,6 @@ val backupExtensionStoreMapper = { store: ExtensionStore ->
         contactWebsite = store.contact.website,
         isLegacy = store.isLegacy,
         extensionListUrl = store.extensionListUrl,
+        enabled = store.enabled,
     )
 }

@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.manga
 
 import android.content.Context
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Immutable
@@ -25,6 +26,11 @@ import eu.kanade.domain.manga.interactor.SetExcludedScanlators
 import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.chaptersFiltered
 import eu.kanade.domain.manga.model.downloadedFilter
+import eu.kanade.domain.track.interactor.AddTracks
+import eu.kanade.domain.track.interactor.RefreshTracks
+import eu.kanade.domain.track.interactor.TrackChapter
+import eu.kanade.domain.track.model.AutoTrackState
+import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.manga.DownloadAction
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.util.formattedMessage
@@ -32,10 +38,13 @@ import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.model.Download
+import eu.kanade.tachiyomi.data.track.EnhancedTracker
+import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.util.chapter.getNextUnread
 import eu.kanade.tachiyomi.util.removeCovers
+import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -77,6 +86,7 @@ import tachiyomi.domain.manga.model.MangaWithChapterCount
 import tachiyomi.domain.manga.model.applyFilter
 import tachiyomi.domain.manga.repository.MangaRepository
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.i18n.MR
 import tachiyomi.source.local.isLocal
 import kotlin.math.floor
@@ -87,7 +97,10 @@ class MangaViewModel(
     @Assisted private val isFromSource: Boolean,
     private val context: Context,
     private val libraryPreferences: LibraryPreferences,
+    trackPreferences: TrackPreferences,
     readerPreferences: ReaderPreferences,
+    private val trackerManager: TrackerManager,
+    private val trackChapter: TrackChapter,
     private val downloadManager: DownloadManager,
     private val downloadCache: DownloadCache,
     private val getMangaAndChapters: GetMangaWithChapters,
@@ -101,11 +114,14 @@ class MangaViewModel(
     private val updateChapter: UpdateChapter,
     private val updateManga: UpdateManga,
     private val getCategories: GetCategories,
+    private val getTracks: GetTracks,
+    private val addTracks: AddTracks,
     private val setMangaCategories: SetMangaCategories,
     private val mangaRepository: MangaRepository,
     private val filterChaptersForDownload: FilterChaptersForDownload,
     private val updateMangaFromRemote: UpdateMangaFromRemote,
     private val sourceManager: SourceManager,
+    private val refreshTracks: RefreshTracks,
     private val coverCache: CoverCache,
 ) : ViewModel() {
 
@@ -141,6 +157,8 @@ class MangaViewModel(
 
     val chapterSwipeStartAction = libraryPreferences.swipeToEndAction.get()
     val chapterSwipeEndAction = libraryPreferences.swipeToStartAction.get()
+    var autoTrackState = trackPreferences.autoUpdateTrackOnMarkRead.get()
+
     private val skipFiltered by readerPreferences.skipFiltered.asState(viewModelScope)
 
     val isUpdateIntervalEnabled =
@@ -226,6 +244,9 @@ class MangaViewModel(
                     hideMissingChapters = libraryPreferences.hideMissingChapters.get(),
                 )
             }
+
+            // Start observe tracking since it only needs mangaId
+            observeTrackers()
 
             // Fetch info-chapters when needed
             if ((needRefreshInfo || needRefreshChapter) && viewModelScope.isActive) {
@@ -364,6 +385,9 @@ class MangaViewModel(
                     // Choose a category
                     else -> showChangeCategoryDialog()
                 }
+
+                // Finally match with enhanced tracking when available
+                addTracks.bindEnhancedTrackers(manga, state.source)
             }
         }
     }
@@ -717,7 +741,56 @@ class MangaViewModel(
                 read = read,
                 chapters = chapters.toTypedArray(),
             )
+
+            if (!read || successState?.hasLoggedInTrackers == false || autoTrackState == AutoTrackState.NEVER) {
+                return@launchIO
+            }
+
+            refreshTrackers()
+
+            val tracks = getTracks.await(mangaId)
+            val maxChapterNumber = chapters.maxOf { it.chapterNumber }
+            val shouldPromptTrackingUpdate = tracks.any { track -> maxChapterNumber > track.lastChapterRead }
+
+            if (!shouldPromptTrackingUpdate) return@launchIO
+            if (autoTrackState == AutoTrackState.ALWAYS) {
+                trackChapter.await(context, mangaId, maxChapterNumber)
+                withUIContext {
+                    context.toast(context.stringResource(MR.strings.trackers_updated_summary, maxChapterNumber.toInt()))
+                }
+                return@launchIO
+            }
+
+            val result = snackbarHostState.showSnackbar(
+                message = context.stringResource(MR.strings.confirm_tracker_update, maxChapterNumber.toInt()),
+                actionLabel = context.stringResource(MR.strings.action_ok),
+                duration = SnackbarDuration.Short,
+                withDismissAction = true,
+            )
+
+            if (result == SnackbarResult.ActionPerformed) {
+                trackChapter.await(context, mangaId, maxChapterNumber)
+            }
         }
+    }
+
+    private suspend fun refreshTrackers() {
+        refreshTracks.await(mangaId)
+            .filter { it.first != null }
+            .forEach { (track, e) ->
+                logcat(LogPriority.ERROR, e) {
+                    "Failed to refresh track data mangaId=$mangaId for service ${track!!.id}"
+                }
+                withUIContext {
+                    context.toast(
+                        context.stringResource(
+                            MR.strings.track_error,
+                            track!!.name,
+                            e.message ?: "",
+                        ),
+                    )
+                }
+            }
     }
 
     /**
@@ -960,6 +1033,36 @@ class MangaViewModel(
 
     // Chapters list - end
 
+    // Track sheet - start
+
+    private fun observeTrackers() {
+        val manga = successState?.manga ?: return
+
+        viewModelScope.launchIO {
+            combine(
+                getTracks.subscribe(manga.id).catch { logcat(LogPriority.ERROR, it) },
+                trackerManager.loggedInTrackersFlow(),
+            ) { mangaTracks, loggedInTrackers ->
+                // Show only if the service supports this manga's source
+                val supportedTrackers = loggedInTrackers.filter { (it as? EnhancedTracker)?.accept(source!!) ?: true }
+                val supportedTrackerIds = supportedTrackers.map { it.id }.toHashSet()
+                val supportedTrackerTracks = mangaTracks.filter { it.trackerId in supportedTrackerIds }
+                supportedTrackerTracks.size to supportedTrackers.isNotEmpty()
+            }
+                .distinctUntilChanged()
+                .collectLatest { (trackingCount, hasLoggedInTrackers) ->
+                    updateSuccessState {
+                        it.copy(
+                            trackingCount = trackingCount,
+                            hasLoggedInTrackers = hasLoggedInTrackers,
+                        )
+                    }
+                }
+        }
+    }
+
+    // Track sheet - end
+
     sealed interface Dialog {
         data class ChangeCategory(
             val manga: Manga,
@@ -970,6 +1073,7 @@ class MangaViewModel(
         data class Migrate(val target: Manga, val current: Manga) : Dialog
         data class SetFetchInterval(val manga: Manga) : Dialog
         data object SettingsSheet : Dialog
+        data object TrackSheet : Dialog
         data object FullCover : Dialog
     }
 
@@ -983,6 +1087,10 @@ class MangaViewModel(
 
     fun showSettingsDialog() {
         updateSuccessState { it.copy(dialog = Dialog.SettingsSheet) }
+    }
+
+    fun showTrackDialog() {
+        updateSuccessState { it.copy(dialog = Dialog.TrackSheet) }
     }
 
     fun showCoverDialog() {
@@ -1012,6 +1120,8 @@ class MangaViewModel(
             val chapters: List<ChapterList.Item>,
             val availableScanlators: Set<String>,
             val excludedScanlators: Set<String>,
+            val trackingCount: Int = 0,
+            val hasLoggedInTrackers: Boolean = false,
             val isRefreshingData: Boolean = false,
             val dialog: Dialog? = null,
             val hasPromptedToAddBefore: Boolean = false,

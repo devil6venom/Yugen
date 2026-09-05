@@ -18,16 +18,16 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystorePropertiesFile = rootProject.file("key.properties")
 
 android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
-        applicationId = "app.mihon"
+        applicationId = "app.yugen"
 
-        versionCode = 29
-        versionName = "0.20.4"
+        versionCode = 11
+        versionName = "1.0.4"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
@@ -42,7 +42,13 @@ android {
 
         signingConfigs {
             named("debug") {
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
                 storePassword = keystoreProperties.getProperty("storePassword")
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
@@ -65,6 +71,10 @@ android {
             proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
 
             buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = true)}\"")
+
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
 
         val commonMatchingFallbacks = listOf(release.name)

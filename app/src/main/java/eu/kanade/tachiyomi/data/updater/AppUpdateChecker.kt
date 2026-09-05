@@ -32,7 +32,7 @@ class AppUpdateChecker(
     }
 }
 
-val GITHUB_REPO = "ddCeka/mihon"
+val GITHUB_REPO = "devil6venom/yugen"
 
 val RELEASE_TAG = "v${BuildConfig.VERSION_NAME}"
 

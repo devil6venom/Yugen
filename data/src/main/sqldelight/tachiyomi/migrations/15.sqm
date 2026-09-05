@@ -1,0 +1,3 @@
+import kotlin.Boolean;
+
+ALTER TABLE extension_store ADD COLUMN enabled INTEGER AS Boolean NOT NULL DEFAULT 1;

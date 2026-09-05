@@ -11,8 +11,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.suspendCancellableCoroutine
 import tachiyomi.core.common.util.lang.launchIO
@@ -39,7 +43,9 @@ internal class HttpPageLoader(
      */
     private val queue = PriorityBlockingQueue<PriorityPage>()
 
-    private val preloadSize = 5
+    private val preloadSize = 10
+
+    private val processingPages = java.util.Collections.synchronizedSet(mutableSetOf<Int>())
 
     init {
         scope.launchIO {
@@ -48,13 +54,24 @@ internal class HttpPageLoader(
                     emit(runInterruptible { queue.take() })
                 }
             }
-                .filter { it.page.status == Page.State.Queue }
-                .collect {
-                    internalLoadPage(
-                        page = it.page,
-                        force = it.priority == PriorityPage.RETRY,
-                    )
+                .filter {
+                    it.page.status == Page.State.Queue && !processingPages.contains(it.page.index)
                 }
+                .onEach { processingPages.add(it.page.index) }
+                .flatMapMerge(concurrency = 3) { item ->
+                    flow {
+                        try {
+                            internalLoadPage(
+                                page = item.page,
+                                force = item.priority == PriorityPage.RETRY,
+                            )
+                        } finally {
+                            processingPages.remove(item.page.index)
+                        }
+                        emit(Unit)
+                    }
+                }
+                .collect()
         }
     }
 
@@ -171,25 +188,32 @@ internal class HttpPageLoader(
      * @param page the page whose source image has to be downloaded.
      */
     private suspend fun internalLoadPage(page: ReaderPage, force: Boolean) {
-        try {
-            if (page.imageUrl.isNullOrEmpty()) {
-                page.status = Page.State.LoadPage
-                page.imageUrl = source.getImageUrl(page)
-            }
-            val imageUrl = page.imageUrl!!
+        var attempt = 0
+        while (attempt < 3) {
+            try {
+                if (page.imageUrl.isNullOrEmpty()) {
+                    page.status = Page.State.LoadPage
+                    page.imageUrl = source.getImageUrl(page)
+                }
+                val imageUrl = page.imageUrl!!
 
-            if (force || !chapterCache.isImageInCache(imageUrl)) {
-                page.status = Page.State.DownloadImage
-                val imageResponse = source.getImage(page)
-                chapterCache.putImageToCache(imageUrl, imageResponse)
-            }
+                if (force || !chapterCache.isImageInCache(imageUrl)) {
+                    page.status = Page.State.DownloadImage
+                    val imageResponse = source.getImage(page)
+                    chapterCache.putImageToCache(imageUrl, imageResponse)
+                }
 
-            page.stream = { chapterCache.getImageFile(imageUrl).inputStream() }
-            page.status = Page.State.Ready
-        } catch (e: Throwable) {
-            page.status = Page.State.Error(e)
-            if (e is CancellationException) {
-                throw e
+                page.stream = { chapterCache.getImageFile(imageUrl).inputStream() }
+                page.status = Page.State.Ready
+                return
+            } catch (e: Throwable) {
+                if (e is CancellationException) throw e
+                attempt++
+                if (attempt >= 3) {
+                    page.status = Page.State.Error(e)
+                } else {
+                    delay(1000L * attempt)
+                }
             }
         }
     }

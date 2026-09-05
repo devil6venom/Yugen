@@ -124,6 +124,7 @@ private fun HistoryScreenContent(
                     HistoryItem(
                         modifier = Modifier.animateItem(),
                         history = value,
+                        lang = item.lang,
                         onClickCover = { onClickCover(value) },
                         onClickResume = { onClickResume(value) },
                         onClickDelete = { onClickDelete(value) },
@@ -137,7 +138,7 @@ private fun HistoryScreenContent(
 
 sealed interface HistoryUiModel {
     data class Header(val date: LocalDate) : HistoryUiModel
-    data class Item(val item: HistoryWithRelations) : HistoryUiModel
+    data class Item(val item: HistoryWithRelations, val lang: String? = null) : HistoryUiModel
 }
 
 @PreviewLightDark

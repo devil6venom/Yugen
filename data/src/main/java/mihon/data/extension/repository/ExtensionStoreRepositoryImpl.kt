@@ -39,6 +39,7 @@ class ExtensionStoreRepositoryImpl(
             contactWebsite = indexUrl,
             isLegacy = false,
             extensionListUrl = null,
+            enabled = true,
         )
     }
 
@@ -46,10 +47,10 @@ class ExtensionStoreRepositoryImpl(
         try {
             database.extension_storeQueries.getAll().awaitAsList().forEach { store ->
                 service.fetch(store.index_url)
-                    .mapCatching {
+                    .onSuccess { fetchedStore ->
                         database.transaction {
-                            upsert(it)
-                            if (store.index_url != it.indexUrl) {
+                            upsert(fetchedStore.copy(enabled = store.enabled))
+                            if (store.index_url != fetchedStore.indexUrl) {
                                 database.extension_storeQueries.delete(store.index_url)
                             }
                         }
@@ -74,21 +75,25 @@ class ExtensionStoreRepositoryImpl(
             contactWebsite = store.contact.website,
             isLegacy = store.isLegacy,
             extensionListUrl = store.extensionListUrl,
+            enabled = store.enabled,
         )
     }
 
     override suspend fun fetchExtensions(): List<Extension.Available> {
         return try {
             supervisorScope {
-                database.extension_storeQueries.getAll(::extensionStoreMapper).awaitAsList().map { store ->
-                    async {
-                        service.getExtensions(store).onFailure {
-                            this@ExtensionStoreRepositoryImpl.logcat(LogPriority.ERROR, it) {
-                                "Failed to fetch extensions for store '${store.name} (${store.indexUrl})'"
+                database.extension_storeQueries.getAll(::extensionStoreMapper)
+                    .awaitAsList()
+                    .filter { it.enabled }
+                    .map { store ->
+                        async {
+                            service.getExtensions(store).onFailure {
+                                this@ExtensionStoreRepositoryImpl.logcat(LogPriority.ERROR, it) {
+                                    "Failed to fetch extensions for store '${store.name} (${store.indexUrl})'"
+                                }
                             }
                         }
                     }
-                }
                     .awaitAll()
                     .flatMap { it.getOrDefault(emptyList()) }
             }
@@ -112,6 +117,10 @@ class ExtensionStoreRepositoryImpl(
             .subscribeToOne()
     }
 
+    override suspend fun updateEnabled(indexUrl: String, enabled: Boolean) {
+        database.extension_storeQueries.updateEnabled(enabled, indexUrl)
+    }
+
     override suspend fun remove(indexUrl: String) {
         database.extension_storeQueries.delete(indexUrl)
     }
@@ -124,6 +133,7 @@ class ExtensionStoreRepositoryImpl(
         contactWebsite: String,
         isLegacy: Boolean,
         extensionListUrl: String?,
+        enabled: Boolean,
     ): ExtensionStore = ExtensionStore(
         indexUrl = indexUrl,
         name = name,
@@ -134,5 +144,6 @@ class ExtensionStoreRepositoryImpl(
         ),
         isLegacy = isLegacy,
         extensionListUrl = extensionListUrl,
+        enabled = enabled,
     )
 }

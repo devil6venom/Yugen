@@ -59,6 +59,51 @@ object LocaleHelper {
             .let { if (uppercase) it.uppercase(Locale.ENGLISH) else it }
     }
 
+    fun get3LetterLanguageCode(lang: String?): String {
+        return when (lang) {
+            null, "" -> ""
+            "all" -> "ALL"
+            "other" -> "OTH"
+            "en" -> "ENG"
+            "en-US" -> "ENG"
+            "en-GB" -> "ENG"
+            "ja" -> "JPN"
+            "ne" -> "NPL"
+            "zh-CN", "zh-Hans" -> "CHS"
+            "zh-TW", "zh-Hant" -> "CHT"
+            "es-419" -> "LAT"
+            "es" -> "SPA"
+            "fr" -> "FRA"
+            "de" -> "DEU"
+            "ru" -> "RUS"
+            "ko" -> "KOR"
+            "pt", "pt-BR" -> "POR"
+            "it" -> "ITA"
+            "hi" -> "HIN"
+            "bn" -> "BEN"
+            "ar" -> "ARA"
+            "tr" -> "TUR"
+            "vi" -> "VIE"
+            "id" -> "IND"
+            "th" -> "THA"
+            "pl" -> "POL"
+            "nl" -> "NLD"
+            else -> {
+                try {
+                    val locale = Locale.forLanguageTag(lang)
+                    val iso3 = locale.isO3Language
+                    if (iso3.isNotEmpty()) {
+                        iso3.uppercase(Locale.ENGLISH)
+                    } else {
+                        lang.replace("-", "").take(3).uppercase(Locale.ENGLISH)
+                    }
+                } catch (e: Exception) {
+                    lang.replace("-", "").take(3).uppercase(Locale.ENGLISH)
+                }
+            }
+        }
+    }
+
     /**
      * Returns display name of a string language code.
      *

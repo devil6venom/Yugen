@@ -19,6 +19,7 @@ import eu.kanade.presentation.browse.components.GlobalSearchErrorResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchLoadingResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchToolbar
+import eu.kanade.presentation.browse.components.LanguageBadge
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchItemResult
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchViewModel
@@ -129,7 +130,9 @@ internal fun GlobalSearchContent(
                     title = fromSourceId?.let {
                         "▶ ${source.name}".takeIf { source.id == fromSourceId }
                     } ?: source.name,
-                    subtitle = LocaleHelper.getLocalizedDisplayName(source.lang),
+                    subtitleContent = {
+                        LanguageBadge(lang = source.lang)
+                    },
                     onClick = { onClickSource(source) },
                     modifier = Modifier.animateItem(),
                 ) {
