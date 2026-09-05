@@ -3,6 +3,12 @@ on:
   push:
     tags:
       - v*
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Custom tag name (optional, defaults to auto-generated)'
+        required: false
+        default: ''
 
 env:
   MIHON_GITHUB_RELEASE: true
@@ -12,36 +18,63 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  get_tag:
+  prepare_release:
     if: github.repository == 'devil6venom/Yugen'
-    name: Extract tag name
+    name: Prepare Tag and Version
     runs-on: 'ubuntu-24.04'
+    permissions:
+      contents: write
     outputs:
-      tag: ${{ steps.extract.outputs.tag }}
-
-    steps:
-      - name: Get tag name
-        id: extract
-        run: echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
-
-  build:
-    if: github.repository == 'devil6venom/Yugen'
-    name: Build
-    runs-on: 'ubuntu-24.04'
-    needs: get_tag
+      tag: ${{ steps.set_tag.outputs.tag }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set tag name
+        id: set_tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT_TAG="${{ github.event.inputs.tag_name }}"
+            if [ -n "$INPUT_TAG" ]; then
+              echo "tag=$INPUT_TAG" >> $GITHUB_OUTPUT
+            else
+              # Auto-generate tag based on version + run number
+              VERSION=$(grep "versionName =" app/build.gradle.kts | awk -F'"' '{print $2}')
+              echo "tag=v$VERSION-build.${{ github.run_number }}" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push tag
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git tag ${{ steps.set_tag.outputs.tag }}
+          git push origin ${{ steps.set_tag.outputs.tag }}
+
+  build:
+    if: github.repository == 'devil6venom/Yugen'
+    name: Build and Sign
+    runs-on: 'ubuntu-24.04'
+    needs: prepare_release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up JDK
-        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        uses: actions/setup-java@v4
         with:
           java-version-file: .github/.java-version
           distribution: temurin
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        uses: gradle/actions/setup-gradle@v3
         with:
           cache-disabled: true
 
@@ -49,7 +82,7 @@ jobs:
         run: ./gradlew assembleRelease
 
       - name: Sign APK
-        uses: r0adkll/sign-android-release@a391126403df92c6a0a3988a829dd47f79b89ed7
+        uses: r0adkll/sign-android-release@v1
         with:
           releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
@@ -61,52 +94,48 @@ jobs:
 
       - name: Rename APK
         run: |
-          set -e
-
-          mv app/build/outputs/apk/release/app-arm64-v8a-release-unsigned-signed.apk mihon-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
-          mv app/build/outputs/apk/release/app-armeabi-v7a-release-unsigned-signed.apk mihon-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
+          mv app/build/outputs/apk/release/app-arm64-v8a-release-unsigned-signed.apk yugen-arm64-v8a-${{ needs.prepare_release.outputs.tag }}.apk
+          mv app/build/outputs/apk/release/app-armeabi-v7a-release-unsigned-signed.apk yugen-armeabi-v7a-${{ needs.prepare_release.outputs.tag }}.apk
 
       - name: Upload APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@v4
         with:
-          name: mihon
+          name: yugen-apks
           path: |
-            mihon-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
-            mihon-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
+            yugen-arm64-v8a-${{ needs.prepare_release.outputs.tag }}.apk
+            yugen-armeabi-v7a-${{ needs.prepare_release.outputs.tag }}.apk
 
   release:
     if: github.repository == 'devil6venom/Yugen'
     name: Create GitHub Release
     runs-on: ubuntu-24.04
-    needs: [get_tag, build]
+    needs: [prepare_release, build]
     permissions:
       contents: write
 
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
         with:
-          merge-multiple: true
-
-      - name: Delete all artifacts
-        uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6.0.0
-        with:
-          failOnError: false
-          name: mihon
+          name: yugen-apks
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.get_tag.outputs.tag }}
-          name: Mihon ${{ needs.get_tag.outputs.tag }}
+          tag_name: ${{ needs.prepare_release.outputs.tag }}
+          name: Yugen ${{ needs.prepare_release.outputs.tag }}
           body: |
-            > [!TIP]
-            >
-            > ### If you are unsure which version to download then go with `mihon-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk`
+            ## Stable Release ${{ needs.prepare_release.outputs.tag }}
+
+            This release was manually triggered and built from the latest stable source.
+
+            ### Downloads
+            * `yugen-arm64-v8a-${{ needs.prepare_release.outputs.tag }}.apk` (Recommended)
+            * `yugen-armeabi-v7a-${{ needs.prepare_release.outputs.tag }}.apk`
           files: |
-            mihon-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
-            mihon-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
+            yugen-arm64-v8a-${{ needs.prepare_release.outputs.tag }}.apk
+            yugen-armeabi-v7a-${{ needs.prepare_release.outputs.tag }}.apk
           draft: false
-          prerelease: true
+          prerelease: false
           generate_release_notes: true
           token: ${{ secrets.MIHON_BOT_TOKEN || secrets.GITHUB_TOKEN }}
