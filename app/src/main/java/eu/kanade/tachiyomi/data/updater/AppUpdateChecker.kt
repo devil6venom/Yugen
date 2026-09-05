@@ -14,7 +14,9 @@ class AppUpdateChecker(
 ) {
 
     suspend fun checkForUpdate(forceCheck: Boolean = false): GetApplicationRelease.Result {
-        if (!forceCheck && System.currentTimeMillis() - basePreferences.lastAppUpdateCheck.get() < 24 * 60 * 60 * 1000) {
+        if (!forceCheck &&
+            System.currentTimeMillis() - basePreferences.lastAppUpdateCheck.get() < 24 * 60 * 60 * 1000
+        ) {
             return GetApplicationRelease.Result.NoNewUpdate
         }
 
@@ -33,7 +35,9 @@ class AppUpdateChecker(
                 ),
             )
 
-            if (result is GetApplicationRelease.Result.NewUpdate || result is GetApplicationRelease.Result.NoNewUpdate) {
+            if (result is GetApplicationRelease.Result.NewUpdate ||
+                result is GetApplicationRelease.Result.NoNewUpdate
+            ) {
                 basePreferences.lastAppUpdateCheck.set(System.currentTimeMillis())
             }
 
