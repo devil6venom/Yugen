@@ -242,19 +242,19 @@ private val displayModes = listOf(
 )
 
 private val groupingModes = listOf<Pair<Any, LibraryGroup>>(
-    R.drawable.ic_ungroup_24dp to LibraryGroup.BY_DEFAULT,
-    R.drawable.ic_browse_filled_24dp to LibraryGroup.BY_SOURCE,
-    R.drawable.ic_progress_clock_24dp to LibraryGroup.BY_STATUS,
-    R.drawable.globe to LibraryGroup.BY_LANGUAGE,
-    MaterialSymbols.Rounded.Favorite to LibraryGroup.BY_TRACKING_STATUS,
+    R.drawable.ic_ungroup_24dp to LibraryGroup.ByDefault,
+    R.drawable.ic_browse_filled_24dp to LibraryGroup.BySource,
+    R.drawable.ic_progress_clock_24dp to LibraryGroup.ByStatus,
+    R.drawable.globe to LibraryGroup.ByLanguage,
+    MaterialSymbols.Rounded.Favorite to LibraryGroup.ByTrackingStatus,
 )
 
 private fun LibraryGroup.getTitleRes() = when (this) {
-    LibraryGroup.BY_DEFAULT -> MR.strings.label_default
-    LibraryGroup.BY_SOURCE -> MR.strings.group_by_source
-    LibraryGroup.BY_STATUS -> MR.strings.group_by_status
-    LibraryGroup.BY_LANGUAGE -> MR.strings.group_by_language
-    LibraryGroup.BY_TRACKING_STATUS -> MR.strings.group_by_tracking_status
+    LibraryGroup.ByDefault -> MR.strings.label_default
+    LibraryGroup.BySource -> MR.strings.group_by_source
+    LibraryGroup.ByStatus -> MR.strings.group_by_status
+    LibraryGroup.ByLanguage -> MR.strings.group_by_language
+    LibraryGroup.ByTrackingStatus -> MR.strings.group_by_tracking_status
     else -> MR.strings.unknown
 }
 
