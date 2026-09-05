@@ -135,7 +135,11 @@ private fun ExtensionStoresListItem(
             val icon = when {
                 store.indexUrl.contains("keiyoushi", ignoreCase = true) -> eu.kanade.tachiyomi.R.mipmap.keiyoushi_repo
                 store.indexUrl.contains("suwayomi", ignoreCase = true) -> eu.kanade.tachiyomi.R.mipmap.suwayomi_repo
-                store.indexUrl.contains("yuzuno", ignoreCase = true) || store.indexUrl.contains("yuzono", ignoreCase = true) -> eu.kanade.tachiyomi.R.mipmap.cursedyuzuno_repo
+                store.indexUrl.contains("yuzuno", ignoreCase = true) ||
+                    store.indexUrl.contains(
+                        "yuzono",
+                        ignoreCase = true,
+                    ) -> eu.kanade.tachiyomi.R.mipmap.cursedyuzuno_repo
                 store.indexUrl.contains("Kareadita", ignoreCase = true) -> eu.kanade.tachiyomi.R.mipmap.kavita_repo
                 store.indexUrl.contains("Nyora", ignoreCase = true) -> eu.kanade.tachiyomi.R.mipmap.repo_nyora_manga
                 else -> eu.kanade.tachiyomi.R.mipmap.other_repo
