@@ -47,6 +47,7 @@ internal class PermissionStep : OnboardingStep {
 
     private var notificationGranted by mutableStateOf(false)
     private var batteryGranted by mutableStateOf(false)
+    private var storageGranted by mutableStateOf(false)
 
     override val isComplete: Boolean = true
 
@@ -68,6 +69,16 @@ internal class PermissionStep : OnboardingStep {
                     }
                     batteryGranted = context.getSystemService<PowerManager>()!!
                         .isIgnoringBatteryOptimizations(context.packageName)
+                    storageGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        context.checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) ==
+                            PackageManager.PERMISSION_GRANTED
+                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        context.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                            PackageManager.PERMISSION_GRANTED
+                    } else {
+                        context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+                            PackageManager.PERMISSION_GRANTED
+                    }
                 }
             }
             lifecycleOwner.lifecycle.addObserver(observer)
@@ -113,6 +124,47 @@ internal class PermissionStep : OnboardingStep {
                     context.startActivity(intent)
                 },
             )
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val permissionRequester = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission(),
+                    onResult = {
+                        // no-op. resulting checks is being done on resume
+                    },
+                )
+                PermissionCheckbox(
+                    title = stringResource(MR.strings.onboarding_permission_external_storage),
+                    subtitle = stringResource(MR.strings.onboarding_permission_external_storage_description),
+                    granted = storageGranted,
+                    onButtonClick = { permissionRequester.launch(Manifest.permission.READ_MEDIA_IMAGES) },
+                )
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val permissionRequester = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission(),
+                    onResult = {
+                        // no-op. resulting checks is being done on resume
+                    },
+                )
+                PermissionCheckbox(
+                    title = stringResource(MR.strings.onboarding_permission_external_storage),
+                    subtitle = stringResource(MR.strings.onboarding_permission_external_storage_description),
+                    granted = storageGranted,
+                    onButtonClick = { permissionRequester.launch(Manifest.permission.READ_EXTERNAL_STORAGE) },
+                )
+            } else {
+                val permissionRequester = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission(),
+                    onResult = {
+                        // no-op. resulting checks is being done on resume
+                    },
+                )
+                PermissionCheckbox(
+                    title = stringResource(MR.strings.onboarding_permission_external_storage),
+                    subtitle = stringResource(MR.strings.onboarding_permission_writing_external_storage_description),
+                    granted = storageGranted,
+                    onButtonClick = { permissionRequester.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE) },
+                )
+            }
 
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
