@@ -27,6 +27,7 @@ jobs:
     outputs:
       tag: ${{ steps.set_tag.outputs.tag }}
       version: ${{ steps.set_tag.outputs.version }}
+      changelog: ${{ steps.gen_changelog.outputs.changelog }}
 
     steps:
       - name: Checkout
@@ -51,6 +52,22 @@ jobs:
           else
             echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
           fi
+
+      - name: Generate Changelog
+        id: gen_changelog
+        run: |
+          # Find the previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 ${{ steps.set_tag.outputs.tag }}^ 2>/dev/null || git rev-list --max-parents=0 HEAD)
+
+          echo "### Commits since $PREV_TAG" > changelog.md
+          git log $PREV_TAG..HEAD --oneline --pretty=format:"* %h %s" >> changelog.md
+
+          # Escape for GitHub Output (handling newlines)
+          {
+            echo 'changelog<<EOF'
+            cat changelog.md
+            echo EOF
+          } >> $GITHUB_OUTPUT
 
       - name: Create and push tag
         if: github.event_name == 'workflow_dispatch'
@@ -133,6 +150,8 @@ jobs:
 
             Built from version ${{ needs.prepare_release.outputs.version }}.
 
+            ${{ needs.prepare_release.outputs.changelog }}
+
             ### Downloads
             * `yugen-arm64-v${{ needs.prepare_release.outputs.version }}-stable.apk` (Recommended)
             * `yugen-armv7-v${{ needs.prepare_release.outputs.version }}-stable.apk`
@@ -141,5 +160,5 @@ jobs:
             yugen-armv7-v${{ needs.prepare_release.outputs.version }}-stable.apk
           draft: false
           prerelease: false
-          generate_release_notes: true
+          generate_release_notes: false
           token: ${{ secrets.MIHON_BOT_TOKEN || secrets.GITHUB_TOKEN }}
