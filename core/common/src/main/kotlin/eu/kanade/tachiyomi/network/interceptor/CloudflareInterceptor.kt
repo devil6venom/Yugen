@@ -12,8 +12,7 @@ import androidx.core.content.ContextCompat
 import eu.kanade.tachiyomi.network.AndroidCookieJar
 import eu.kanade.tachiyomi.util.system.isOutdated
 import eu.kanade.tachiyomi.util.system.toast
-import okhttp3.Cookie
-import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
@@ -37,19 +36,21 @@ class CloudflareInterceptor(
         return response.header("cf-mitigated") == "challenge" && response.header("Server") in SERVER_CHECK
     }
 
+    override fun getNonce(url: HttpUrl): String? = cookieManager.get(url).firstOrNull {
+        it.name == "cf_clearance"
+    }?.value
+
     override fun intercept(
         chain: Interceptor.Chain,
         request: Request,
         response: Response,
-    ): Response {
+        nonce: String?,
+    ): Response? {
         try {
             response.close()
             cookieManager.remove(request.url, COOKIE_NAMES, 0)
-            val oldCookie = cookieManager.get(request.url)
-                .firstOrNull { it.name == "cf_clearance" }
-            resolveWithWebView(request, oldCookie)
-
-            return chain.proceed(request)
+            resolveWithWebView(request, nonce)
+            return null
         }
         // Because OkHttp's enqueue only handles IOExceptions, wrap the exception so that
         // we don't crash the entire app
@@ -61,7 +62,7 @@ class CloudflareInterceptor(
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private fun resolveWithWebView(originalRequest: Request, oldCookie: Cookie?) {
+    private fun resolveWithWebView(originalRequest: Request, oldNonce: String?) {
         // We need to lock this thread until the WebView finds the challenge solution url, because
         // OkHttp doesn't support asynchronous interceptors.
         val latch = CountDownLatch(1)
@@ -92,13 +93,7 @@ class CloudflareInterceptor(
 
             webview.webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView, url: String) {
-                    fun isCloudFlareBypassed(): Boolean {
-                        return cookieManager.get(origRequestUrl.toHttpUrl())
-                            .firstOrNull { it.name == "cf_clearance" }
-                            .let { it != null && it != oldCookie }
-                    }
-
-                    if (isCloudFlareBypassed()) {
+                    if (isBypassed(originalRequest.url, oldNonce)) {
                         cloudflareBypassed = true
                         latch.countDown()
                     }
