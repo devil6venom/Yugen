@@ -8,6 +8,6 @@ interface BuildConfig {
 }
 
 val Project.Config: BuildConfig get() = object : BuildConfig {
-    override val enableUpdater: Boolean = project.hasProperty("enable-updater")
+    override val enableUpdater: Boolean = true
     override val includeDependencyInfo: Boolean = project.hasProperty("include-dependency-info")
 }
