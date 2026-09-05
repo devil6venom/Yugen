@@ -56,18 +56,19 @@ jobs:
       - name: Generate Changelog
         id: gen_changelog
         run: |
-          # Find the previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 ${{ steps.set_tag.outputs.tag }}^ 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          # Fetch all tags to ensure git describe works
+          git fetch --tags --force
 
-          echo "### Commits since $PREV_TAG" > changelog.md
+          # Find the previous tag before current HEAD
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)
+
+          echo "### Changes since $PREV_TAG" > changelog.md
           git log $PREV_TAG..HEAD --oneline --pretty=format:"* %h %s" >> changelog.md
 
-          # Escape for GitHub Output (handling newlines)
-          {
-            echo 'changelog<<EOF'
-            cat changelog.md
-            echo EOF
-          } >> $GITHUB_OUTPUT
+          # Handling newlines for GitHub Output
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat changelog.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create and push tag
         if: github.event_name == 'workflow_dispatch'
@@ -146,7 +147,7 @@ jobs:
           tag_name: ${{ needs.prepare_release.outputs.tag }}
           name: Yugen ${{ needs.prepare_release.outputs.tag }}
           body: |
-            ## Stable Release ${{ needs.prepare_release.outputs.tag }}
+            ## Release ${{ needs.prepare_release.outputs.tag }}
 
             Built from version ${{ needs.prepare_release.outputs.version }}.
 
