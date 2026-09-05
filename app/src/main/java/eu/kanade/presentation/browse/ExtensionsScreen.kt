@@ -217,7 +217,9 @@ private fun ExtensionContent(
                                         {}
                                     }
                                 }
-                                else -> {{}}
+                                else -> {
+                                    {}
+                                }
                             }
                         ExtensionHeader(
                             textRes = header.textRes,

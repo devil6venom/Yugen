@@ -349,7 +349,13 @@ class LibraryViewModel(
                 }
                 LibraryGroup.ByTrackingStatus -> {
                     context.stringResource(
-                        if (title == "tracked") MR.strings.action_filter_tracked else MR.strings.action_filter_not_tracked,
+                        if (title ==
+                            "tracked"
+                        ) {
+                            MR.strings.action_filter_tracked
+                        } else {
+                            MR.strings.action_filter_not_tracked
+                        },
                     )
                 }
                 else -> title

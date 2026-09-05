@@ -272,7 +272,9 @@ class ExtensionsViewModel(
 }
 
 enum class ExtensionFilter {
-    ALL, SFW, NSFW
+    ALL,
+    SFW,
+    NSFW,
 }
 
 typealias ItemGroups = Map<ExtensionUiModel.Header, List<ExtensionUiModel.Item>>
