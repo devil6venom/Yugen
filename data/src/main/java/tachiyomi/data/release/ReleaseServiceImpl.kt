@@ -48,7 +48,12 @@ class ReleaseServiceImpl(
         }
 
         return if (!isFoss) {
-            map[Build.SUPPORTED_ABIS[0]] ?: map[null]
+            val abi = Build.SUPPORTED_ABIS[0]
+            map[abi] ?: when {
+                abi.startsWith("arm64") -> map["arm64"]
+                abi.startsWith("armeabi") -> map["armv7"]
+                else -> null
+            } ?: map[null]
         } else {
             map[FOSS]
         }
@@ -56,7 +61,7 @@ class ReleaseServiceImpl(
 
     companion object {
         private const val FOSS = "foss"
-        private val BUILD_TYPES = listOf(FOSS, "arm64-v8a", "armeabi-v7a")
+        private val BUILD_TYPES = listOf(FOSS, "arm64-v8a", "armeabi-v7a", "arm64", "armv7")
 
         /**
          * Regular expression that matches a mention to a valid GitHub username, like it's
