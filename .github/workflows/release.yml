@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Custom tag name (optional, defaults to auto-generated)'
+        description: 'Custom tag name (optional, defaults to vX.Y.Z-stable)'
         required: false
         default: ''
 
@@ -26,6 +26,7 @@ jobs:
       contents: write
     outputs:
       tag: ${{ steps.set_tag.outputs.tag }}
+      version: ${{ steps.set_tag.outputs.version }}
 
     steps:
       - name: Checkout
@@ -36,14 +37,16 @@ jobs:
       - name: Set tag name
         id: set_tag
         run: |
+          VERSION=$(grep "versionName =" app/build.gradle.kts | awk -F'"' '{print $2}')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             INPUT_TAG="${{ github.event.inputs.tag_name }}"
             if [ -n "$INPUT_TAG" ]; then
               echo "tag=$INPUT_TAG" >> $GITHUB_OUTPUT
             else
-              # Auto-generate tag based on version + run number
-              VERSION=$(grep "versionName =" app/build.gradle.kts | awk -F'"' '{print $2}')
-              echo "tag=v$VERSION-build.${{ github.run_number }}" >> $GITHUB_OUTPUT
+              # Use stable suffix for manual runs
+              echo "tag=v$VERSION-stable-${{ github.run_number }}" >> $GITHUB_OUTPUT
             fi
           else
             echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
@@ -94,16 +97,17 @@ jobs:
 
       - name: Rename APK
         run: |
-          mv app/build/outputs/apk/release/app-arm64-v8a-release-unsigned-signed.apk yugen-arm64-v8a-${{ needs.prepare_release.outputs.tag }}.apk
-          mv app/build/outputs/apk/release/app-armeabi-v7a-release-unsigned-signed.apk yugen-armeabi-v7a-${{ needs.prepare_release.outputs.tag }}.apk
+          VER="${{ needs.prepare_release.outputs.version }}"
+          mv app/build/outputs/apk/release/app-arm64-v8a-release-unsigned-signed.apk yugen-arm64-v${VER}-stable.apk
+          mv app/build/outputs/apk/release/app-armeabi-v7a-release-unsigned-signed.apk yugen-armv7-v${VER}-stable.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: yugen-apks
           path: |
-            yugen-arm64-v8a-${{ needs.prepare_release.outputs.tag }}.apk
-            yugen-armeabi-v7a-${{ needs.prepare_release.outputs.tag }}.apk
+            yugen-arm64-v${{ needs.prepare_release.outputs.version }}-stable.apk
+            yugen-armv7-v${{ needs.prepare_release.outputs.version }}-stable.apk
 
   release:
     if: github.repository == 'devil6venom/Yugen'
@@ -127,14 +131,14 @@ jobs:
           body: |
             ## Stable Release ${{ needs.prepare_release.outputs.tag }}
 
-            This release was manually triggered and built from the latest stable source.
+            Built from version ${{ needs.prepare_release.outputs.version }}.
 
             ### Downloads
-            * `yugen-arm64-v8a-${{ needs.prepare_release.outputs.tag }}.apk` (Recommended)
-            * `yugen-armeabi-v7a-${{ needs.prepare_release.outputs.tag }}.apk`
+            * `yugen-arm64-v${{ needs.prepare_release.outputs.version }}-stable.apk` (Recommended)
+            * `yugen-armv7-v${{ needs.prepare_release.outputs.version }}-stable.apk`
           files: |
-            yugen-arm64-v8a-${{ needs.prepare_release.outputs.tag }}.apk
-            yugen-armeabi-v7a-${{ needs.prepare_release.outputs.tag }}.apk
+            yugen-arm64-v${{ needs.prepare_release.outputs.version }}-stable.apk
+            yugen-armv7-v${{ needs.prepare_release.outputs.version }}-stable.apk
           draft: false
           prerelease: false
           generate_release_notes: true
