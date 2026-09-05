@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   get_tag:
-    if: github.repository == 'devil6venom/yugen'
+    if: github.repository == 'devil6venom/Yugen'
     name: Extract tag name
     runs-on: 'ubuntu-24.04'
     outputs:
@@ -25,7 +25,7 @@ jobs:
         run: echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
 
   build:
-    if: github.repository == 'devil6venom/yugen'
+    if: github.repository == 'devil6venom/Yugen'
     name: Build
     runs-on: 'ubuntu-24.04'
     needs: get_tag
@@ -75,10 +75,12 @@ jobs:
             mihon-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
 
   release:
-    if: github.repository == 'devil6venom/yugen'
+    if: github.repository == 'devil6venom/Yugen'
     name: Create GitHub Release
     runs-on: ubuntu-24.04
     needs: [get_tag, build]
+    permissions:
+      contents: write
 
     steps:
       - name: Download all artifacts
@@ -107,4 +109,4 @@ jobs:
           draft: false
           prerelease: true
           generate_release_notes: true
-          token: ${{ secrets.MIHON_BOT_TOKEN }}
+          token: ${{ secrets.MIHON_BOT_TOKEN || secrets.GITHUB_TOKEN }}
