@@ -2,11 +2,11 @@ package tachiyomi.domain.library.model
 
 sealed interface LibraryGroup {
 
-    data object BY_DEFAULT : LibraryGroup
-    data object BY_SOURCE : LibraryGroup
-    data object BY_STATUS : LibraryGroup
-    data object BY_TRACKING_STATUS : LibraryGroup
-    data object BY_LANGUAGE : LibraryGroup
+    data object ByDefault : LibraryGroup
+    data object BySource : LibraryGroup
+    data object ByStatus : LibraryGroup
+    data object ByTrackingStatus : LibraryGroup
+    data object ByLanguage : LibraryGroup
 
     object Serializer {
         fun deserialize(serialized: String): LibraryGroup {
@@ -19,16 +19,16 @@ sealed interface LibraryGroup {
     }
 
     companion object {
-        val values by lazy { setOf(BY_DEFAULT, BY_SOURCE, BY_STATUS, BY_TRACKING_STATUS, BY_LANGUAGE) }
-        val default = BY_DEFAULT
+        val values by lazy { setOf(ByDefault, BySource, ByStatus, ByTrackingStatus, ByLanguage) }
+        val default = ByDefault
 
         fun deserialize(serialized: String): LibraryGroup {
             return when (serialized) {
-                "BY_DEFAULT" -> BY_DEFAULT
-                "BY_SOURCE" -> BY_SOURCE
-                "BY_STATUS" -> BY_STATUS
-                "BY_TRACKING_STATUS" -> BY_TRACKING_STATUS
-                "BY_LANGUAGE" -> BY_LANGUAGE
+                "BY_DEFAULT" -> ByDefault
+                "BY_SOURCE" -> BySource
+                "BY_STATUS" -> ByStatus
+                "BY_TRACKING_STATUS" -> ByTrackingStatus
+                "BY_LANGUAGE" -> ByLanguage
                 else -> default
             }
         }
@@ -36,11 +36,11 @@ sealed interface LibraryGroup {
 
     fun serialize(): String {
         return when (this) {
-            BY_DEFAULT -> "BY_DEFAULT"
-            BY_SOURCE -> "BY_SOURCE"
-            BY_STATUS -> "BY_STATUS"
-            BY_TRACKING_STATUS -> "BY_TRACKING_STATUS"
-            BY_LANGUAGE -> "BY_LANGUAGE"
+            ByDefault -> "BY_DEFAULT"
+            BySource -> "BY_SOURCE"
+            ByStatus -> "BY_STATUS"
+            ByTrackingStatus -> "BY_TRACKING_STATUS"
+            ByLanguage -> "BY_LANGUAGE"
         }
     }
 }

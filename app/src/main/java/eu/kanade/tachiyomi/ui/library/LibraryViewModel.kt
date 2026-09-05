@@ -175,7 +175,7 @@ class LibraryViewModel(
     }
         .distinctUntilChanged()
         .map { (data, groupingMode) ->
-            val groupedFavorites = if (groupingMode == LibraryGroup.BY_DEFAULT) {
+            val groupedFavorites = if (groupingMode == LibraryGroup.ByDefault) {
                 data.favorites
                     .applyCategoryGrouping(data.categories, data.showSystemCategory)
                     .applySort(data.tracksMap, data.loggedInTrackerIds)
@@ -319,21 +319,21 @@ class LibraryViewModel(
         groupingMode: LibraryGroup,
         tracksMap: Map<Long, List<Track>>,
     ): Map<Category, List<LibraryItem>> {
-        if (groupingMode == LibraryGroup.BY_DEFAULT) return emptyMap()
+        if (groupingMode == LibraryGroup.ByDefault) return emptyMap()
 
         val grouped: Map<String, List<LibraryItem>> = when (groupingMode) {
-            LibraryGroup.BY_SOURCE -> groupBy { it.sourceName }.toSortedMap()
-            LibraryGroup.BY_STATUS -> groupBy { it.libraryManga.manga.status.toString() }
+            LibraryGroup.BySource -> groupBy { it.sourceName }.toSortedMap()
+            LibraryGroup.ByStatus -> groupBy { it.libraryManga.manga.status.toString() }
                 .toSortedMap(compareBy { it.toIntOrNull() ?: 0 })
-            LibraryGroup.BY_LANGUAGE -> groupBy { it.sourceLanguage }.toSortedMap()
-            LibraryGroup.BY_TRACKING_STATUS -> groupBy {
+            LibraryGroup.ByLanguage -> groupBy { it.sourceLanguage }.toSortedMap()
+            LibraryGroup.ByTrackingStatus -> groupBy {
                 if (tracksMap[it.id].isNullOrEmpty()) "untracked" else "tracked"
             }.toSortedMap(reverseOrder())
         }
 
         return grouped.mapKeys { (title, _) ->
             val name = when (groupingMode) {
-                LibraryGroup.BY_STATUS -> {
+                LibraryGroup.ByStatus -> {
                     val status = title.toLongOrNull() ?: -1L
                     context.stringResource(
                         when (status) {
@@ -347,7 +347,7 @@ class LibraryViewModel(
                         },
                     )
                 }
-                LibraryGroup.BY_TRACKING_STATUS -> {
+                LibraryGroup.ByTrackingStatus -> {
                     context.stringResource(
                         if (title == "tracked") MR.strings.action_filter_tracked else MR.strings.action_filter_not_tracked,
                     )
@@ -878,7 +878,7 @@ class LibraryViewModel(
         val showCategoryTabs: Boolean = false,
         val showMangaCount: Boolean = false,
         val showMangaContinueButton: Boolean = false,
-        val groupingMode: LibraryGroup = LibraryGroup.BY_DEFAULT,
+        val groupingMode: LibraryGroup = LibraryGroup.ByDefault,
         val dialog: Dialog? = null,
         val libraryData: LibraryData = LibraryData(),
         private val activeCategoryIndex: Int = 0,
