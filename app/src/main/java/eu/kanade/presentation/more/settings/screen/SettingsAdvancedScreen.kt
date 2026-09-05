@@ -26,8 +26,8 @@ import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
 import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
-import eu.kanade.tachiyomi.data.library.MetadataUpdateJob
 import eu.kanade.presentation.more.settings.screen.network.DnsTestScreen
+import eu.kanade.tachiyomi.data.library.MetadataUpdateJob
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.PREF_DOH_360
 import eu.kanade.tachiyomi.network.PREF_DOH_ADGUARD

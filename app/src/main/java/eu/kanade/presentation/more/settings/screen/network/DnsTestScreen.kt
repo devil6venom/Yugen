@@ -96,12 +96,12 @@ class DnsTestScreen : Screen() {
                                 onClick = {
                                     viewModel.applyDns(id)
                                     context.toast("DNS applied instantly")
-                                }
+                                },
                             )
-                        }
-                    )
+                        },
+                    ),
                 )
-            }
+            },
         )
     }
 
@@ -115,7 +115,7 @@ class DnsTestScreen : Screen() {
         Text(
             text = "●",
             color = color,
-            modifier = Modifier.padding(horizontal = 8.dp)
+            modifier = Modifier.padding(horizontal = 8.dp),
         )
     }
 
