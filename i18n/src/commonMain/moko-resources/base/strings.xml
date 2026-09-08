@@ -534,6 +534,37 @@
     <string name="pref_webtoon_smooth_scroll">Smooth scroll</string>
     <string name="pref_webtoon_smooth_scroll_summary">Remove the edge bounce for a more continuous webtoon scrolling experience</string>
 
+    <string name="webgpu">WebGPU</string>
+
+    <string name="transition_animation">Transition animation</string>
+    <string name="transition_animation_dual">Transition animation (dual)</string>
+    <string name="transition_animation_basic">Basic</string>
+    <string name="transition_animation_flip">Page flip</string>
+    <string name="transition_animation_flip_left">Page flip (left)</string>
+    <string name="transition_animation_flip_right">Page flip (right)</string>
+    <string name="transition_animation_stack_left">Stack (left)</string>
+    <string name="transition_animation_stack_right">Stack (right)</string>
+    <string name="transition_animation_stack_up">Stack (up)</string>
+    <string name="transition_animation_stack_down">Stack (down)</string>
+    <string name="transition_animation_sphere">Sphere</string>
+    <string name="transition_animation_cube_inside">Cube (Inside)</string>
+    <string name="transition_animation_cube_outside">Cube (Outside)</string>
+    <string name="transition_animation_fade">Fade</string>
+    <string name="transition_animation_fade_white">Fade to white</string>
+    <string name="transition_animation_none">None</string>
+
+    <string name="cutout_mode">Display cutout mode</string>
+    <string name="cutout_mode_dual">Display cutout mode (dual)</string>
+    <string name="cutout_mode_ignore">Ignore</string>
+    <string name="cutout_mode_avoid">Avoid</string>
+    <string name="cutout_mode_shift">Shift</string>
+
+    <string name="dual_page_view">Dual page view</string>
+    <string name="dual_page_view_never">Never</string>
+    <string name="dual_page_view_always">Always</string>
+    <string name="dual_page_view_wide">When wide</string>
+    <string name="pref_continuous_minwidth">Min width</string>
+
       <!-- Downloads section -->
     <string name="pref_category_delete_chapters">Delete chapters</string>
     <string name="pref_remove_after_marked_as_read">After manually marked as read</string>
