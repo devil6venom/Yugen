@@ -109,6 +109,6 @@ fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier {
     return this.clickable(
         interactionSource = interactionSource,
         indication = null,
-        onClick = onClick
+        onClick = onClick,
     )
 }

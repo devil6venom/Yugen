@@ -22,14 +22,14 @@ class RecommendationEngine(
     private val priorityKeywords = listOf(
         "Regressed", "Reborn", "Cultivate", "System", "Harmony Wonder", "Big Breast",
         "Wonder", "Mother", "Reincarnated", "Leveling", "Player", "Dungeon", "Isekai",
-        "Martial", "Cultivation", "Return", "Vengeance", "Villainess", "Otome"
+        "Martial", "Cultivation", "Return", "Vengeance", "Villainess", "Otome",
     )
     private val commonWords = setOf(
         "The", "And", "For", "With", "From", "That", "This", "Your", "Some", "What",
         "How", "Who", "Are", "Was", "Were", "Been", "Has", "Have", "Had", "Will",
         "Shall", "Can", "Could", "Should", "Would", "May", "Might", "Must", "Into",
         "Onto", "Upon", "Across", "Along", "Through", "Between", "Among", "During",
-        "Before", "After", "Under", "Over", "Above", "Below", "Around"
+        "Before", "After", "Under", "Over", "Above", "Below", "Around",
     )
 
     suspend fun fetch(manga: Manga): Map<RecommendationCategory, List<Recommendation>> = coroutineScope {
@@ -52,7 +52,10 @@ class RecommendationEngine(
         val randomTags = manga.genre?.shuffled()?.take(3) ?: emptyList()
 
         // Unique search pool: Brackets first, then priority keywords, then title words, then tags
-        val searchPool = (bracketContent + activePriorityKeywords + significantTitleWords + discoveredKeywords + randomTags)
+        val searchPool = (
+            bracketContent + activePriorityKeywords + significantTitleWords + discoveredKeywords +
+                randomTags
+            )
             .distinctBy { it.lowercase() }
             .filter { it.length > 2 }
             .shuffled()
@@ -62,30 +65,38 @@ class RecommendationEngine(
 
         // 2. Parallel Search for each term
         searchPool.forEach { term ->
-            tasks.add(async {
-                val category = RecommendationCategory("term_$term", "Similar to $term")
-                category to fetchRemote(source, term, category.id, manga.url)
-            })
+            tasks.add(
+                async {
+                    val category = RecommendationCategory("term_$term", "Similar to $term")
+                    category to fetchRemote(source, term, category.id, manga.url)
+                },
+            )
         }
 
         // 3. Author Category
         manga.author?.takeIf { it.isNotBlank() }?.let { author ->
-            tasks.add(async {
-                val category = RecommendationCategory("author", "More by $author")
-                category to fetchRemote(source, author, category.id, manga.url)
-            })
+            tasks.add(
+                async {
+                    val category = RecommendationCategory("author", "More by $author")
+                    category to fetchRemote(source, author, category.id, manga.url)
+                },
+            )
         }
 
         // 4. Source Discovery (Latest)
-        tasks.add(async {
-            val category = RecommendationCategory("discovery", "Discovery from ${source.name}")
-            val candidates = try {
-                source.getLatestUpdates(1).mangas
-                    .map { it.toDomainManga(source.id).toRecommendation(category.id) }
-                    .filter { it.url != manga.url }
-            } catch (e: Exception) { emptyList() }
-            category to candidates
-        })
+        tasks.add(
+            async {
+                val category = RecommendationCategory("discovery", "Discovery from ${source.name}")
+                val candidates = try {
+                    source.getLatestUpdates(1).mangas
+                        .map { it.toDomainManga(source.id).toRecommendation(category.id) }
+                        .filter { it.url != manga.url }
+                } catch (e: Exception) {
+                    emptyList()
+                }
+                category to candidates
+            },
+        )
 
         val results = awaitAll(*tasks.toTypedArray())
         val seenUrls = mutableSetOf<String>(manga.url)
@@ -137,7 +148,7 @@ class RecommendationEngine(
             thumbnailUrl = thumbnailUrl,
             sourceId = source,
             url = url,
-            categoryId = categoryId
+            categoryId = categoryId,
         )
     }
 
@@ -147,7 +158,7 @@ class RecommendationEngine(
             title = title,
             thumbnailUrl = thumbnail_url,
             author = author,
-            source = sourceId
+            source = sourceId,
         )
     }
 }
