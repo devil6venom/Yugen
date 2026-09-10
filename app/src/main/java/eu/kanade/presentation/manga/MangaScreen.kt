@@ -66,6 +66,7 @@ import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.chapter.service.missingChaptersCount
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.model.Manga
+import tachiyomi.domain.manga.model.Recommendation
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.TwoPanelBox
@@ -125,6 +126,10 @@ fun MangaScreen(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+
+    // Recommendations
+    onRecommendationClicked: (Recommendation) -> Unit,
+    onSeeAllRecommendationsClicked: () -> Unit,
 ) {
     val context = LocalContext.current
     val onCopyTagToClipboard: (tag: String) -> Unit = {
@@ -168,6 +173,8 @@ fun MangaScreen(
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
+            onRecommendationClicked = onRecommendationClicked,
+            onSeeAllRecommendationsClicked = onSeeAllRecommendationsClicked,
         )
     } else {
         MangaScreenLargeImpl(
@@ -204,6 +211,8 @@ fun MangaScreen(
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
+            onRecommendationClicked = onRecommendationClicked,
+            onSeeAllRecommendationsClicked = onSeeAllRecommendationsClicked,
         )
     }
 }
@@ -256,6 +265,10 @@ private fun MangaScreenSmallImpl(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+
+    // Recommendations
+    onRecommendationClicked: (Recommendation) -> Unit,
+    onSeeAllRecommendationsClicked: () -> Unit,
 ) {
     val chapterListState = rememberLazyListState()
 
@@ -418,6 +431,23 @@ private fun MangaScreenSmallImpl(
                         )
                     }
 
+                    if (state.recommendations.isNotEmpty()) {
+                        item(
+                            key = MangaScreenItem.RECOMMENDATIONS,
+                            contentType = MangaScreenItem.RECOMMENDATIONS,
+                        ) {
+                            val allRecs = remember(state.recommendations) {
+                                state.recommendations.values.flatten().distinctBy { it.url }
+                            }
+                            eu.kanade.presentation.manga.components.RecommendationRow(
+                                title = stringResource(MR.strings.label_rec_similar),
+                                recommendations = allRecs,
+                                onRecommendationClick = onRecommendationClicked,
+                                onSeeAllClick = onSeeAllRecommendationsClicked,
+                            )
+                        }
+                    }
+
                     item(
                         key = MangaScreenItem.CHAPTER_HEADER,
                         contentType = MangaScreenItem.CHAPTER_HEADER,
@@ -498,6 +528,10 @@ fun MangaScreenLargeImpl(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+
+    // Recommendations
+    onRecommendationClicked: (Recommendation) -> Unit,
+    onSeeAllRecommendationsClicked: () -> Unit,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
@@ -640,6 +674,18 @@ fun MangaScreenLargeImpl(
                             onCopyTagToClipboard = onCopyTagToClipboard,
                             onEditNotes = onEditNotesClicked,
                         )
+
+                        if (state.recommendations.isNotEmpty()) {
+                            val allRecs = remember(state.recommendations) {
+                                state.recommendations.values.flatten().distinctBy { it.url }
+                            }
+                            eu.kanade.presentation.manga.components.RecommendationRow(
+                                title = stringResource(MR.strings.label_rec_similar),
+                                recommendations = allRecs,
+                                onRecommendationClick = onRecommendationClicked,
+                                onSeeAllClick = onSeeAllRecommendationsClicked,
+                            )
+                        }
                     }
                 },
                 endContent = {

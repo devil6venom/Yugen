@@ -797,6 +797,13 @@
     <string name="ongoing">Ongoing</string>
     <string name="unknown">Unknown</string>
     <string name="unknown_author">Unknown author</string>
+    <string name="label_recommendations">Recommendations</string>
+    <string name="label_rec_similar">Similar Manga</string>
+    <string name="label_rec_similar">Similar Manga</string>
+    <string name="label_see_all">See all</string>
+    <string name="label_rec_author">More by this Author</string>
+    <string name="label_rec_genre">Similar Suggestions</string>
+    <string name="label_rec_source">More from this Source</string>
     <string name="author">Author</string>
     <string name="artist">Artist</string>
     <!-- reserved for #6163 -->
