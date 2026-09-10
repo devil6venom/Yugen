@@ -57,10 +57,12 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.feature.migration.dialog.MigrateMangaDialog
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.manga.model.Manga
+import tachiyomi.domain.manga.model.RecommendationCategory
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.screens.LoadingScreen
 
@@ -165,6 +167,49 @@ class MangaScreen(
             onChapterSelected = viewModel::toggleSelection,
             onAllChapterSelected = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,
+            onRecommendationClicked = { recommendation ->
+                scope.launch {
+                    val mangaId = recommendation.mangaId
+                    if (mangaId != null) {
+                        navigator.push(MangaScreen(mangaId))
+                    } else {
+                        // For remote manga, we need to insert it first
+                        val manga = Manga.create().copy(
+                            url = recommendation.url,
+                            title = recommendation.title,
+                            thumbnailUrl = recommendation.thumbnailUrl,
+                            source = recommendation.sourceId,
+                        )
+                        val localManga = viewModel.networkToLocalManga(manga)
+                        navigator.push(MangaScreen(localManga.id, true))
+                    }
+                }
+            },
+            onSeeAllRecommendationsClicked = {
+                navigator.push(
+                    RecommendationSeeAllScreen(
+                        title = context.stringResource(MR.strings.label_rec_similar),
+                        recommendations = successState.recommendations,
+                        onRecommendationClick = { rec ->
+                            scope.launch {
+                                val mangaId = rec.mangaId
+                                if (mangaId != null) {
+                                    navigator.push(MangaScreen(mangaId))
+                                } else {
+                                    val m = Manga.create().copy(
+                                        url = rec.url,
+                                        title = rec.title,
+                                        thumbnailUrl = rec.thumbnailUrl,
+                                        source = rec.sourceId,
+                                    )
+                                    val lm = viewModel.networkToLocalManga(m)
+                                    navigator.push(MangaScreen(lm.id, true))
+                                }
+                            }
+                        },
+                    ),
+                )
+            },
         )
 
         var showScanlatorsDialog by remember { mutableStateOf(false) }

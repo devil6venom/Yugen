@@ -83,6 +83,8 @@ import tachiyomi.domain.manga.interactor.GetMangaWithChapters
 import tachiyomi.domain.manga.interactor.SetMangaChapterFlags
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaWithChapterCount
+import tachiyomi.domain.manga.model.Recommendation
+import tachiyomi.domain.manga.model.RecommendationCategory
 import tachiyomi.domain.manga.model.applyFilter
 import tachiyomi.domain.manga.repository.MangaRepository
 import tachiyomi.domain.source.service.SourceManager
@@ -123,6 +125,8 @@ class MangaViewModel(
     private val sourceManager: SourceManager,
     private val refreshTracks: RefreshTracks,
     private val coverCache: CoverCache,
+    private val recommendationEngine: eu.kanade.tachiyomi.data.recommendation.RecommendationEngine,
+    val networkToLocalManga: tachiyomi.domain.manga.interactor.NetworkToLocalManga,
 ) : ViewModel() {
 
     val state: StateFlow<MangaViewModel.State>
@@ -248,6 +252,8 @@ class MangaViewModel(
             // Start observe tracking since it only needs mangaId
             observeTrackers()
 
+            fetchRecommendations()
+
             // Fetch info-chapters when needed
             if ((needRefreshInfo || needRefreshChapter) && viewModelScope.isActive) {
                 fetchAllFromSource(
@@ -259,6 +265,18 @@ class MangaViewModel(
 
             // Initial loading finished
             updateSuccessState { it.copy(isRefreshingData = false) }
+        }
+    }
+
+    fun fetchRecommendations() {
+        val manga = manga ?: return
+        viewModelScope.launchIO {
+            try {
+                val recommendations = recommendationEngine.fetch(manga)
+                updateSuccessState { it.copy(recommendations = recommendations) }
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e)
+            }
         }
     }
 
@@ -1126,6 +1144,7 @@ class MangaViewModel(
             val dialog: Dialog? = null,
             val hasPromptedToAddBefore: Boolean = false,
             val hideMissingChapters: Boolean = false,
+            val recommendations: Map<RecommendationCategory, List<Recommendation>> = emptyMap(),
         ) : State {
             val processedChapters by lazy {
                 chapters.applyFilters(manga).toList()
